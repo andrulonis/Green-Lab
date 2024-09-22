@@ -1,4 +1,7 @@
-# Experiment-Runner
+# Green Lab 2024 replication package
+
+This is the replication package for the project submission of team *name of the team* for the 2024 edition of the Green Lab course. Our goal is identify The performance and energy efficiency impact of parallelising
+the execution of jobs in High Performance Computing (HPC) domain. In particular, using SLURM, we run a number of [haddock3](https://github.com/haddocking/haddock3) jobs using different splits of core counts per group of jobs and measure the energy and energy usage, the CPU utilisation and the execution time, to identify how different paralellisation splits affect these metrics. 
 
 ## Requirements
 
@@ -28,7 +31,7 @@ python experiment-runner/ examples/hello-world/RunnerConfig.py
 
 In this section, we assume as the current working directory, the root directory of the project.
 
-Run our [haddock3](https://github.com/haddocking/haddock3) config:
+Run our HADDOCK config:
 
 ```bash
 python experiment-runner/ configs/haddock/RunnerConfig.py
