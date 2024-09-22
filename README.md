@@ -7,7 +7,17 @@ the execution of jobs in High Performance Computing (HPC) domain. In particular,
 
 The framework has been tested with Python3 version 3.8, but should also work with any higher version. It has been tested under Linux and macOS. It does **not** work on Windows (at the moment).
 
-To get started:
+The experiment requires two servers: one for dispatching jobs using SLURM (`S1`) and one purely dedicated to executing these jobs (the HPC instance, `S2`). SLURM must be setup on these servers such that jobs can be queued by `S1` to be executed on `S2`.
+
+### 1. Set up experiment runner
+This step should be performed on server `S1`, i.e. the dispatcher.
+
+Clone this repo:
+
+```bash
+git clone git@github.com:andrulonis/Green-Lab.git
+cd Green-Lab
+```
 
 Create and activate a virtual environment:
 ```bash
@@ -26,6 +36,12 @@ To verify installation, run:
 ```bash
 python experiment-runner/ examples/hello-world/RunnerConfig.py
 ```
+
+### 2. Set up haddock
+This step should be performed on server `S2`, i.e. the high performance job executor.
+
+Install **haddock3** by following the HADDOCK3 install instructions:
+https://github.com/haddocking/haddock3/blob/main/docs/INSTALL.md.
 
 ## Running
 
