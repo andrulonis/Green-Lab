@@ -37,7 +37,7 @@ To verify installation, run:
 python experiment-runner/ examples/hello-world/RunnerConfig.py
 ```
 
-### 2. Set up haddock
+### 2. Set up HADDOCK
 This step should be performed on server `S2`, i.e. the high performance job executor.
 
 Install **haddock3** by following the HADDOCK3 install instructions:
