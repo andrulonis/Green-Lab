@@ -1,3 +1,6 @@
+import shlex
+import subprocess
+import time
 from EventManager.Models.RunnerEvents import RunnerEvents
 from EventManager.EventSubscriptionController import EventSubscriptionController
 from ConfigValidator.Config.Models.RunTableModel import RunTableModel
@@ -13,27 +16,32 @@ from os.path import dirname, realpath
 
 from pprint import pprint
 
-# From https://github.com/haddocking/haddock3/blob/main/examples/run_examples-full.py
+'''
+From https://github.com/haddocking/haddock3/blob/main/examples/run_examples-full.py
+We pick one example from every type, others are commented out. This way we can test a broad
+range of HADDOCK capabilities, while limiting the number of runs and thereby the runtime            Baseline times running 1 "full"             "Test" counterpart:
+of the experiment, which would otherwise exceed our available time.                                 instance with 32 cores, in seconds:         
+'''
 HADDOCK_EXAMPLES = (
-    ("docking-protein-DNA"         , "docking-protein-DNA-full.cfg"),
-    ("docking-protein-DNA"         , "docking-protein-DNA-cltsel-full.cfg"),
-    ("docking-protein-DNA"         , "docking-protein-DNA-mdref-full.cfg"), 
-    ("docking-protein-homotrimer"  , "docking-protein-homotrimer-full.cfg"),
-    ("docking-protein-ligand"      , "docking-protein-ligand-full.cfg"),
-    ("docking-protein-ligand-shape", "docking-protein-ligand-shape-full.cfg"),
-    ("docking-protein-peptide"     , "docking-protein-peptide-full.cfg")
-    ("docking-protein-peptide"     , "docking-protein-peptide-cltsel-full.cfg"),
-    ("docking-protein-peptide"     , "docking-protein-peptide-mdref-full.cfg"),
-    ("docking-protein-protein"     , "docking-protein-protein-full.cfg"),
-    ("docking-protein-protein"     , "docking-protein-protein-cltsel-full.cfg"),
-    ("docking-protein-protein"     , "docking-protein-protein-mdref-full.cfg"),
-    ("docking-multiple-ambig"      , "docking-multiple-tbls-clt-full.cfg"),
-    ("docking-antibody-antigen"    , "docking-antibody-antigen-CDR-NMR-CSP-full.cfg"),
-    ("docking-antibody-antigen"    , "docking-antibody-antigen-CDR-accessible-full.cfg"),
-    ("docking-antibody-antigen"    , "docking-antibody-antigen-CDR-accessible-clt-full.cfg"),
-    ("docking-antibody-antigen"    , "docking-antibody-antigen-ranairCDR-full.cfg"),
-    ("docking-antibody-antigen"    , "docking-antibody-antigen-ranairCDR-clt-full.cfg"),
-    ("peptide-cyclisation"         , "cyclise-peptide-full.cfg"),
+    ("docking-protein-DNA"         , "docking-protein-DNA-full.cfg"),                               # 594                                         
+    # ("docking-protein-DNA"         , "docking-protein-DNA-cltsel-full.cfg"),
+    # ("docking-protein-DNA"         , "docking-protein-DNA-mdref-full.cfg"),
+    ("docking-protein-homotrimer"  , "docking-protein-homotrimer-full.cfg"),                        # 2833                                      155 (uses up to  5 cores)
+    ("docking-protein-ligand"      , "docking-protein-ligand-full.cfg"),                            # 2394                                      221 (uses up to 20 cores, mostly 5)
+    # ("docking-protein-ligand-shape", "docking-protein-ligand-shape-full.cfg"),
+    ("docking-protein-peptide"     , "docking-protein-peptide-full.cfg"),                           # > 1hr (time limit)                        425 (uses up to 18 cores, mostly 5)
+    # ("docking-protein-peptide"     , "docking-protein-peptide-cltsel-full.cfg"),
+    # ("docking-protein-peptide"     , "docking-protein-peptide-mdref-full.cfg"),
+    ("docking-protein-protein"     , "docking-protein-protein-full.cfg"),                           # 1100                                      -                                       
+    # ("docking-protein-protein"     , "docking-protein-protein-cltsel-full.cfg"),
+    # ("docking-protein-protein"     , "docking-protein-protein-mdref-full.cfg"),
+    ("docking-multiple-ambig"      , "docking-multiple-tbls-clt-full.cfg"),                         # > 1hr (time limit)                        353 (uses up to 18 cores)
+    ("docking-antibody-antigen"    , "docking-antibody-antigen-CDR-NMR-CSP-full.cfg"),              # 2723
+    # ("docking-antibody-antigen"    , "docking-antibody-antigen-CDR-accessible-full.cfg"),
+    # ("docking-antibody-antigen"    , "docking-antibody-antigen-CDR-accessible-clt-full.cfg"),
+    # ("docking-antibody-antigen"    , "docking-antibody-antigen-ranairCDR-full.cfg"),              # 2 hrs 💀
+    # ("docking-antibody-antigen"    , "docking-antibody-antigen-ranairCDR-clt-full.cfg"),
+    ("peptide-cyclisation"         , "cyclise-peptide-full.cfg"),                                   # 1231                                      -
 )
 
 class RunnerConfig:
@@ -80,16 +88,18 @@ class RunnerConfig:
         representing each run performed"""
 
         # Haddock examples jobs: https://www.bonvinlab.org/haddock3/examples.html
-        factor1 = FactorModel("haddock_job", [job[0] for job in HADDOCK_EXAMPLES])
-        factor2 = FactorModel("example_factor2", [True, False])
+        factor1 = FactorModel("haddock_job", [
+            "docking-protein-DNA-full",
+            "docking-protein-protein-full",
+            "cyclise-peptide-full"
+        ])
+        factor2 = FactorModel("treatment", ["sequential", "parallel"])
+        # factor3 = FactorModel("njobs", [4, 8, 16])
 
         self.run_table_model = RunTableModel(
             factors=[factor1, factor2],
-            exclude_variations=[
-                {factor1: ['example_treatment1']},                   # all runs having treatment "example_treatment1" will be excluded
-                {factor1: ['example_treatment2'], factor2: [True]},  # all runs having the combination ("example_treatment2", True) will be excluded
-            ],
-            data_columns=['avg_cpu', 'avg_mem']
+            data_columns=['energy_usage', 'execution_time', 'memory_usage', 'cpu_usage'],
+            repetitions=10,
         )
 
         return self.run_table_model
