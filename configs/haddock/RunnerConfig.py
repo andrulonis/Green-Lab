@@ -10,46 +10,49 @@ from ConfigValidator.Config.Models.OperationType import OperationType
 from ExtendedTyping.Typing import SupportsStr
 from ProgressManager.Output.OutputProcedure import OutputProcedure as output
 
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
 from os.path import dirname, realpath
 
+from string import Template
 from pprint import pprint
-
-'''
-From https://github.com/haddocking/haddock3/blob/main/examples/run_examples-full.py
-We pick one example from every type, others are commented out. This way we can test a broad
-range of HADDOCK capabilities, while limiting the number of runs and thereby the runtime            Baseline times running 1 "full"             "Test" counterpart:
-of the experiment, which would otherwise exceed our available time.                                 instance with 32 cores, in seconds:         
-'''
-HADDOCK_EXAMPLES = (
-    ("docking-protein-DNA"         , "docking-protein-DNA-full.cfg"),                               # 594                                       -         
-    # ("docking-protein-DNA"         , "docking-protein-DNA-cltsel-full.cfg"),                      # -                                         -
-    # ("docking-protein-DNA"         , "docking-protein-DNA-mdref-full.cfg"),                       # -                                         -
-    ("docking-protein-homotrimer"  , "docking-protein-homotrimer-full.cfg"),                        # 2833                                      155 (uses up to  5 cores)
-    ("docking-protein-ligand"      , "docking-protein-ligand-full.cfg"),                            # 2394                                      221 (uses up to 20 cores, mostly 5)
-    # ("docking-protein-ligand-shape", "docking-protein-ligand-shape-full.cfg"),                    # -                                         -
-    ("docking-protein-peptide"     , "docking-protein-peptide-full.cfg"),                           # > 1hr (time limit)                        425 (uses up to 18 cores, mostly 5)
-    # ("docking-protein-peptide"     , "docking-protein-peptide-cltsel-full.cfg"),                  # -                                         -
-    # ("docking-protein-peptide"     , "docking-protein-peptide-mdref-full.cfg"),                   # -                                         -
-    ("docking-protein-protein"     , "docking-protein-protein-full.cfg"),                           # 1100                                      -                                       
-    # ("docking-protein-protein"     , "docking-protein-protein-cltsel-full.cfg"),                  # -                                         -
-    # ("docking-protein-protein"     , "docking-protein-protein-mdref-full.cfg"),                   # -                                         - 
-    ("docking-multiple-ambig"      , "docking-multiple-tbls-clt-full.cfg"),                         # > 1hr (time limit)                        353 (uses up to 18 cores)
-    ("docking-antibody-antigen"    , "docking-antibody-antigen-CDR-NMR-CSP-full.cfg"),              # 2723                                      -
-    # ("docking-antibody-antigen"    , "docking-antibody-antigen-CDR-accessible-full.cfg"),         # -                                         -
-    # ("docking-antibody-antigen"    , "docking-antibody-antigen-CDR-accessible-clt-full.cfg"),     # -                                         -
-    # ("docking-antibody-antigen"    , "docking-antibody-antigen-ranairCDR-full.cfg"),              # ~2 hrs                                    -
-    # ("docking-antibody-antigen"    , "docking-antibody-antigen-ranairCDR-clt-full.cfg"),          # -                                         -
-    ("peptide-cyclisation"         , "cyclise-peptide-full.cfg"),                                   # 1231                                      -
-)
+import shutil
+import os
 
 class RunnerConfig:
     ROOT_DIR = Path(dirname(realpath(__file__)))
 
+    '''
+    From https://github.com/haddocking/haddock3/blob/main/examples/run_examples-full.py
+    We pick one example from every type, others are commented out. This way we can test a broad
+    range of HADDOCK capabilities, while limiting the number of runs and thereby the runtime            Baseline times running 1 "full"             "test" counterpart:
+    of the experiment, which would otherwise exceed our available time.                                 instance with 32 cores, in seconds:         
+    '''
+    HADDOCK_JOBS: Dict[str, str] = {
+          "docking-protein-DNA"         : "docking-protein-DNA-full.cfg",                             # 594                                       -         
+        # "docking-protein-DNA"         : "docking-protein-DNA-cltsel-full.cfg",                      # -                                         -
+        # "docking-protein-DNA"         : "docking-protein-DNA-mdref-full.cfg",                       # -                                         -
+        # "docking-protein-homotrimer"  : "docking-protein-homotrimer-full.cfg",                      # 2833                                      155 (uses up to  5 cores)
+        # "docking-protein-ligand"      : "docking-protein-ligand-full.cfg",                          # 2394                                      221 (uses up to 20 cores, mostly 5)
+        # "docking-protein-ligand-shape": "docking-protein-ligand-shape-full.cfg",                    # -                                         -
+        # "docking-protein-peptide"     : "docking-protein-peptide-full.cfg",                         # > 1hr (time limit)                        425 (uses up to 18 cores, mostly 5)
+        # "docking-protein-peptide"     : "docking-protein-peptide-cltsel-full.cfg",                  # -                                         -
+        # "docking-protein-peptide"     : "docking-protein-peptide-mdref-full.cfg",                   # -                                         -
+          "docking-protein-protein"     : "docking-protein-protein-full.cfg",                         # 1100                                      -                                       
+        # "docking-protein-protein"     : "docking-protein-protein-cltsel-full.cfg",                  # -                                         -
+        # "docking-protein-protein"     : "docking-protein-protein-mdref-full.cfg",                   # -                                         - 
+        # "docking-multiple-ambig"      : "docking-multiple-tbls-clt-full.cfg",                       # > 1hr (time limit)                        353 (uses up to 18 cores)
+        # "docking-antibody-antigen"    : "docking-antibody-antigen-CDR-NMR-CSP-full.cfg",            # 2723                                      -
+        # "docking-antibody-antigen"    : "docking-antibody-antigen-CDR-accessible-full.cfg",         # -                                         -
+        # "docking-antibody-antigen"    : "docking-antibody-antigen-CDR-accessible-clt-full.cfg",     # -                                         -
+        # "docking-antibody-antigen"    : "docking-antibody-antigen-ranairCDR-full.cfg",              # ~2 hrs                                    -
+        # "docking-antibody-antigen"    : "docking-antibody-antigen-ranairCDR-clt-full.cfg",          # -                                         -
+          "peptide-cyclisation"         : "cyclise-peptide-full.cfg",                                 # 1231                                      -
+    }
+
     # ================================ USER SPECIFIC CONFIG ================================
     """The name of the experiment."""
-    name:                       str             = "new_runner_experiment"
+    name:                       str             = "HPC_Haddock"
 
     """The path in which Experiment Runner will create a folder with the name `self.name`, in order to store the
     results from this experiment. (Path does not need to exist - it will be created if necessary.)
@@ -61,7 +64,7 @@ class RunnerConfig:
 
     """The time Experiment Runner will wait after a run completes.
     This can be essential to accommodate for cooldown periods on some systems."""
-    time_between_runs_in_ms:    int             = 1000
+    time_between_runs_in_ms:    int             = 1000 # * 60 * 2  # 2 minutes
 
     # Dynamic configurations can be one-time satisfied here before the program takes the config as-is
     # e.g. Setting some variable based on some criteria
@@ -88,11 +91,7 @@ class RunnerConfig:
         representing each run performed"""
 
         # Haddock examples jobs: https://www.bonvinlab.org/haddock3/examples.html
-        factor1 = FactorModel("haddock_job", [
-            "docking-protein-DNA-full",
-            "docking-protein-protein-full",
-            "cyclise-peptide-full"
-        ])
+        factor1 = FactorModel("haddock_job", RunnerConfig.HADDOCK_JOBS.keys())
         factor2 = FactorModel("treatment", ["sequential", "parallel"])
 
         self.run_table_model = RunTableModel(
@@ -103,11 +102,50 @@ class RunnerConfig:
 
         return self.run_table_model
 
+    def get_environment_variable(self, key: str) -> Optional[str]:
+        """Return the value of the environment variable with the given key.
+        If the environment variable is not set, raise a KeyError"""
+        value = os.environ.get(key)
+
+        if value is None:
+            raise KeyError(f"Environment variable {key} not found")
+
+        return value
+
     def before_experiment(self) -> None:
         """Perform any activity required before starting the experiment here
         Invoked only once during the lifetime of the program."""
 
         output.console_log("Config.before_experiment() called!")
+
+        # Create shared directory for storing results
+        self.shared_dir = self.ROOT_DIR / 'shared'
+        if not self.shared_dir.exists():
+            raise FileNotFoundError(f"Shared directory {self.shared_dir} not found, please follow the README instructions")
+
+        shared_cfg_dir = self.shared_dir / 'jobs'
+        if not shared_cfg_dir.exists():
+            shared_cfg_dir.mkdir()
+            output.console_log(f"Created HADDOCK jobs directory: {shared_cfg_dir}")
+
+        for base_dir in RunnerConfig.HADDOCK_JOBS:
+            cfg_dir = self.ROOT_DIR / 'haddock-workflows' / base_dir
+            cfg_dir_dest = shared_cfg_dir / base_dir
+
+            if not cfg_dir.exists():
+                raise FileNotFoundError(f"Directory {cfg_dir} not found")
+
+            if cfg_dir_dest.exists():
+                output.console_log_WARNING(f"{cfg_dir_dest} already exists, skipping copy")
+                continue
+
+            output.console_log(f"Copying {cfg_dir} to shared directory")
+            shutil.copytree(cfg_dir, cfg_dir_dest)     
+
+        outfiles_dir = self.shared_dir / 'out'
+        if not outfiles_dir.exists():
+            outfiles_dir.mkdir()
+            output.console_log(f"Created HADDOCK output directory: {outfiles_dir}")
 
     def before_run(self) -> None:
         """Perform any activity required before starting a run.
@@ -119,8 +157,33 @@ class RunnerConfig:
         """Perform any activity required for starting the run here.
         For example, starting the target system to measure.
         Activities after starting the run should also be performed here."""
-
         output.console_log("Config.start_run() called!")
+
+        slurm_job_template = self.ROOT_DIR / 'slurm-job-template.sh'
+        if not slurm_job_template.exists():
+            raise FileNotFoundError(f"Slurm job template {slurm_job_template} not found")
+        slurm_job_template = Template(slurm_job_template.read_text())
+
+        run_id = context.run_variation['__run_id']
+        cpus_per_task = 8 if context.run_variation['treatment'] == 'parallel' else 32
+        worker_shared_dir = Path(self.get_environment_variable('WORKER_NODE_SHARED_DIR'))
+        haddock_job_dir = context.run_variation['haddock_job']
+
+        # Create SLURM job script
+        slurm_job_script = slurm_job_template.safe_substitute(
+            job_name = run_id,
+            cpus_per_task = cpus_per_task,
+            ntasks = "4" if cpus_per_task == 32 else "1",
+            shared_dir = worker_shared_dir,
+            cfg_dir = haddock_job_dir,
+            cfg_file = RunnerConfig.HADDOCK_JOBS[haddock_job_dir],
+            node = self.get_environment_variable('WORKER_NODE_NAME'),
+            working_dir = self.get_environment_variable('WORKER_NODE_WORKING_DIR'),
+            haddock3_venv_dir = self.get_environment_variable('WORKER_NODE_HADDOCK_VENV_DIR'),
+        )
+
+        self.slurm_job_script_path = self.shared_dir / f"{run_id}.sh"
+        self.slurm_job_script_path.write_text(slurm_job_script)
 
     def start_measurement(self, context: RunnerContext) -> None:
         """Perform any activity required for starting measurements."""
@@ -139,8 +202,10 @@ class RunnerConfig:
     def stop_run(self, context: RunnerContext) -> None:
         """Perform any activity here required for stopping the run.
         Activities after stopping the run should also be performed here."""
-
         output.console_log("Config.stop_run() called!")
+
+        # Remove SLURM job script
+        self.slurm_job_script_path.unlink()
 
     def populate_run_data(self, context: RunnerContext) -> Optional[Dict[str, SupportsStr]]:
         """Parse and process any measurement data here.
