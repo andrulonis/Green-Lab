@@ -148,6 +148,11 @@ class RunnerConfig:
             outfiles_dir.mkdir()
             output.console_log(f"Created HADDOCK output directory: {outfiles_dir}")
 
+        self.slurm_scripts_dir = self.ROOT_DIR / 'slurm-scripts'
+        if not self.slurm_scripts_dir.exists():
+            self.slurm_scripts_dir.mkdir()
+            output.console_log(f"Created SLURM scripts directory: {self.slurm_scripts_dir}")
+
     def before_run(self) -> None:
         """Perform any activity required before starting a run.
         No context is available here as the run is not yet active (BEFORE RUN)"""
@@ -183,8 +188,12 @@ class RunnerConfig:
             haddock3_venv_dir = self.get_environment_variable('WORKER_NODE_HADDOCK_VENV_DIR'),
         )
 
-        self.slurm_job_script_path = self.shared_dir / f"{run_id}.sh"
+        self.slurm_job_script_path = self.slurm_scripts_dir / f"{run_id}.sh"
         self.slurm_job_script_path.write_text(slurm_job_script)
+
+        # Submit SLURM job
+        output.console_log(f"Submitting SLURM job {self.slurm_job_script_path}")
+        # TODO: subprocess.run(shlex.split(f"sbatch {self.slurm_job_script_path}"))
 
     def start_measurement(self, context: RunnerContext) -> None:
         """Perform any activity required for starting measurements."""
@@ -194,6 +203,8 @@ class RunnerConfig:
         """Perform any interaction with the running target system here, or block here until the target finishes."""
 
         output.console_log("Config.interact() called!")
+
+        # TODO: Wait for SLURM job to finish, by polling slurm job status
 
     def stop_measurement(self, context: RunnerContext) -> None:
         """Perform any activity here required for stopping measurements."""
