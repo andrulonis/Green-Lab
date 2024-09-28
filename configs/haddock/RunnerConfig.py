@@ -98,11 +98,12 @@ class RunnerConfig:
             factors=[factor1, factor2],
             data_columns=['energy_usage', 'execution_time', 'memory_usage', 'cpu_usage'],
             repetitions=10,
+            shuffle=True
         )
 
         return self.run_table_model
 
-    def get_environment_variable(self, key: str) -> Optional[str]:
+    def get_environment_variable(self, key: str) -> str:
         """Return the value of the environment variable with the given key.
         If the environment variable is not set, raise a KeyError"""
         value = os.environ.get(key)
@@ -173,7 +174,7 @@ class RunnerConfig:
         slurm_job_script = slurm_job_template.safe_substitute(
             job_name = run_id,
             cpus_per_task = cpus_per_task,
-            ntasks = "4" if cpus_per_task == 32 else "1",
+            ntasks = 1 if cpus_per_task == 32 else 4,
             shared_dir = worker_shared_dir,
             cfg_dir = haddock_job_dir,
             cfg_file = RunnerConfig.HADDOCK_JOBS[haddock_job_dir],
