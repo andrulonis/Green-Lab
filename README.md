@@ -15,45 +15,53 @@ The framework has been tested with Python3 version 3.8, but should also work wit
 
 The experiment requires two servers: one for dispatching jobs using SLURM (`S1`) and one purely dedicated to executing these jobs (the HPC instance, `S2`). SLURM must be setup on these servers such that jobs can be queued by `S1` to be executed on `S2`.
 
-### 1. Set up experiment runner
-This step should be performed on server `S1`, i.e. the dispatcher.
+## Setup
 
-Clone this repo:
+### 1. Coordinator Node (`S1`) 
+
+#### 1.1 Clone this repo
 
 ```bash
 git clone git@github.com:andrulonis/Green-Lab.git
 cd Green-Lab
 ```
+#### 1.2 Dependencies
 
 Create and activate a virtual environment:
+
 ```bash
 python -m venv .venv
 . .venv/bin/activate
 ```
-
 Install the requirements:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-To verify installation, run:
+#### 1.3 Shared directory
+
+Set up a shared directory using the commands below. Replace `<hostname_of_S2>` with the hostname of the worker node (`S2`). This directory will be used to share the experiment configurations and the experiment results between the coordinator node and the worker node. Typically you can use the name of the SLURM node as the hostname.
 
 ```bash
-python experiment-runner/ examples/hello-world/RunnerConfig.py
+export WORKER_NODE=<hostname_of_S2>
+mkdir configs/haddock/shared
+echo "${PWD}/configs/haddock/shared ${WORKER_NODE}(rw,sync,no_subtree_check)" | sudo tee -a /etc/exports
+sudo exportfs -ra
 ```
 
-### 2. Set up HADDOCK
-This step should be performed on server `S2`, i.e. the high performance job executor.
-
+### 2. Worker Node (`S2`)
 Install **haddock3** by following the HADDOCK3 install instructions:
 https://github.com/haddocking/haddock3/blob/main/docs/INSTALL.md.
 
 ## Running
 
-In this section, we assume as the current working directory, the root directory of the project.
+In this section we assume as the current working directory the root directory of the project.
 
-Run our HADDOCK config:
+#### 1. Set up environment variables
+Create a copy of the `.env.template` file and name it `.env`. Fill in the necessary environment variables as described in the file.
+
+#### 2. Run the config
 
 ```bash
 python experiment-runner/ configs/haddock/RunnerConfig.py
