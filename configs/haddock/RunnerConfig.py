@@ -119,7 +119,7 @@ class RunnerConfig:
 
         output.console_log("Config.before_experiment() called!")
 
-        # Create shared directory for storing results
+        # There should be a shared directory for storing results
         self.shared_dir = self.ROOT_DIR / 'shared'
         if not self.shared_dir.exists():
             raise FileNotFoundError(f"Shared directory {self.shared_dir} not found, please follow the README instructions")
