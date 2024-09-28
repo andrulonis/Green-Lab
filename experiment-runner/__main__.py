@@ -14,6 +14,8 @@ from ConfigValidator.Config.Validation.ConfigValidator import ConfigValidator
 from ConfigValidator.CustomErrors.ConfigErrors import ConfigInvalidClassNameError
 from ExperimentOrchestrator.Experiment.ExperimentController import ExperimentController
 
+from dotenv import load_dotenv
+
 def is_no_argument_given(args: List[str]): return (len(args) == 1)
 def is_config_file_given(args: List[str]): return (args[1][-3:] == '.py')
 def load_and_get_config_file_as_module(args: List[str]):
@@ -51,6 +53,9 @@ def calc_ast_md5sum(src, name):
 
 if __name__ == "__main__":
     try: 
+        if not load_dotenv():
+            raise BaseError("No .env file found in the root of the project.")
+
         if is_no_argument_given(sys.argv):
             sys.argv.append('help')
             CLIRegister.parse_command(sys.argv)
