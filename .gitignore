@@ -14,3 +14,4 @@ _trial_temp/
 pycharm-interpreter.sh
 python
 .env
+configs/*/shared
