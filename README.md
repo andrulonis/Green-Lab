@@ -21,7 +21,7 @@ The experiment requires two servers: one for dispatching jobs using SLURM (`S1`)
 
 #### 1.1 Clone this repo
 
-```bash
+```sh
 git clone git@github.com:andrulonis/Green-Lab.git
 cd Green-Lab
 ```
@@ -29,13 +29,13 @@ cd Green-Lab
 
 Create and activate a virtual environment:
 
-```bash
+```sh
 python -m venv .venv
 . .venv/bin/activate
 ```
 Install the requirements:
 
-```bash
+```sh
 pip install -r requirements.txt
 ```
 
@@ -43,27 +43,46 @@ pip install -r requirements.txt
 
 Set up a shared directory using the commands below. Replace `<hostname_of_S2>` with the hostname of the worker node (`S2`). This directory will be used to share the experiment configurations and the experiment results between the coordinator node and the worker node. Typically you can use the name of the SLURM node as the hostname.
 
-```bash
-export WORKER_NODE=<hostname_of_S2>
+```sh
 mkdir configs/haddock/shared
-echo "${PWD}/configs/haddock/shared ${WORKER_NODE}(rw,sync,no_subtree_check)" | sudo tee -a /etc/exports
+echo "${PWD}/configs/haddock/shared <hostname_of_S2>(rw,sync,no_subtree_check,anonuid=1006,anongid=1006)" | sudo tee -a /etc/exports
 sudo exportfs -ra
 ```
 
 ### 2. Worker Node (`S2`)
+
+#### 2.1 HADDOCK3
+
 Install **haddock3** by following the HADDOCK3 install instructions:
 https://github.com/haddocking/haddock3/blob/main/docs/INSTALL.md.
 
+#### 2.2 Shared directory
+
+Mount the shared directory that you created on `S1` somehwere on `S2`. An example configuration is given below. Replace `<hostname_of_S1>` with the hostname of the coordinator node (`S1`) and ensure that the paths are valid.
+
+```sh
+mkdir ~/shared
+sudo mount -o rw <hostname_of_S1>:/path/to/configs/haddock/shared ~/shared
+```
+
+Test if you are able to write a file to this shared directory:
+
+```sh
+touch ~/shared/test
+```
+
+Read it on `S1` to confirm that the NFS write worked.
+
 ## Running
 
-In this section we assume as the current working directory the root directory of the project.
+In this section we assume as the current working directory the root directory of the project and that the virtual environment is activated, if you made one.
 
 #### 1. Set up environment variables
 Create a copy of the `.env.template` file and name it `.env`. Fill in the necessary environment variables as described in the file.
 
 #### 2. Run the config
 
-```bash
+```sh
 python experiment-runner/ configs/haddock/RunnerConfig.py
 ```
 
