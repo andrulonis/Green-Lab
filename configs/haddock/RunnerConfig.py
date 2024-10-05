@@ -83,6 +83,7 @@ class RunnerConfig:
             (RunnerEvents.AFTER_EXPERIMENT , self.after_experiment )
         ])
         self.run_table_model = None  # Initialized later
+        self.failed = False
 
         output.console_log("Custom config loaded")
 
@@ -112,9 +113,25 @@ class RunnerConfig:
             raise KeyError(f"Environment variable {key} not found")
 
         return value
-    
-    def get_job_status(self) -> str:
-        return subprocess.check_output(shlex.split(f"{self.ROOT_DIR / 'get-job-status.sh'} {self.job_id}")).decode()[:-1]
+
+    def slurm_get_job_status(self) -> str:
+        cmd = shlex.split(f"{self.ROOT_DIR / 'get-job-status.sh'} {self.job_id}")
+
+        return subprocess.check_output(cmd).decode()[:-1]
+
+    def slurm_wait_for_status(self, status_options: List[str], wait_delay: int = 5) -> bool:
+        cur_status = self.slurm_get_job_status()
+        error_states = ("FAILED",  "CANCELLED", "DEADLINE", "REVOKED", "STOPPED", "SUSPENDED", "TIMEOUT")
+
+        while cur_status not in status_options:
+            if cur_status in error_states:
+                return False
+
+            output.console_log(f"Waiting {wait_delay} seconds for status {' or '.join(status_options)} on job {self.job_id}, current status: {cur_status}")
+            time.sleep(wait_delay)
+            cur_status = self.slurm_get_job_status()
+
+        return True
 
     def before_experiment(self) -> None:
         """Perform any activity required before starting the experiment here
@@ -196,21 +213,15 @@ class RunnerConfig:
 
         # Submit SLURM job
         output.console_log(f"Submitting SLURM job {self.slurm_job_script_path}")
-        status = subprocess.check_output(shlex.split(f"sbatch {self.slurm_job_script_path}")).decode()
-        self.job_id = int(status.split()[-1])
+        success = subprocess.check_output(shlex.split(f"sbatch {self.slurm_job_script_path}")).decode()
+        self.job_id = int(success.split()[-1])
         output.console_log(f"Batch job started with job ID {self.job_id}")
 
         # Wait for the job to start running
-        status = self.get_job_status()
-        wait_delay = 5
-        while status not in ("RUNNING", "COMPLETED"):
-            if status == "FAILED":
-                output.console_log_FAIL(f"Failed to start job {run_id}")
-                return
-
-            output.console_log(f"Waiting {wait_delay} seconds for job {run_id} to start, current status: {status}")
-            time.sleep(wait_delay)
-            status = self.get_job_status()
+        if not self.slurm_wait_for_status(["RUNNING", "COMPLETED"]):
+            output.console_log_FAIL(f"Job {self.job_id} failed!")
+            self.failed = True
+            return
 
         output.console_log(f"Job {run_id} successfully started")
 
@@ -223,28 +234,17 @@ class RunnerConfig:
 
         output.console_log("Config.interact() called!")
 
+        if self.failed:
+            return
+
         job_name = context.run_variation['__run_id']
 
         # Wait for SLURM job to finish
-        status = status = self.get_job_status()
-        wait_delay = 60
-        while status != "COMPLETED":
-            if status == "FAILED":
-                output.console_log_FAIL(f"Job {job_name} failed")
-                return
-                
-            if status == "DEADLINE":
-                output.console_log_FAIL(f"Job {job_name} exceeded time limit")
-                return
-
-            if status != "RUNNING":
-                output.console_log_WARNING(f"Job {job_name} in unknown state {status}")
-
-            output.console_log(f"Waiting {wait_delay} seconds for job {job_name} to finish, current status: {status}")
-            time.sleep(wait_delay)
-            status = status = self.get_job_status()
-
-        output.console_log(f"Job {job_name} successfully started")
+        if not self.slurm_wait_for_status(["COMPLETED"], wait_delay=30):
+            output.console_log_FAIL(f"Job {self.job_id} failed!")
+            self.failed = True
+            return
+        output.console_log(f"Job {job_name} completed successfully")
 
     def stop_measurement(self, context: RunnerContext) -> None:
         """Perform any activity here required for stopping measurements."""
