@@ -112,6 +112,9 @@ class RunnerConfig:
             raise KeyError(f"Environment variable {key} not found")
 
         return value
+    
+    def get_job_status(self) -> str:
+        return subprocess.check_output(shlex.split(f"{self.ROOT_DIR / 'get-job-status.sh'} {self.job_id}")).decode()[:-1]
 
     def before_experiment(self) -> None:
         """Perform any activity required before starting the experiment here
@@ -193,7 +196,23 @@ class RunnerConfig:
 
         # Submit SLURM job
         output.console_log(f"Submitting SLURM job {self.slurm_job_script_path}")
-        # TODO: subprocess.run(shlex.split(f"sbatch {self.slurm_job_script_path}"))
+        status = subprocess.check_output(shlex.split(f"sbatch {self.slurm_job_script_path}")).decode()
+        self.job_id = int(status.split()[-1])
+        output.console_log(f"Batch job started with job ID {self.job_id}")
+
+        # Wait for the job to start running
+        status = self.get_job_status()
+        wait_delay = 5
+        while status not in ("RUNNING", "COMPLETED"):
+            if status == "FAILED":
+                output.console_log_FAIL(f"Failed to start job {run_id}")
+                return
+
+            output.console_log(f"Waiting {wait_delay} seconds for job {run_id} to start, current status: {status}")
+            time.sleep(wait_delay)
+            status = self.get_job_status()
+
+        output.console_log(f"Job {run_id} successfully started")
 
     def start_measurement(self, context: RunnerContext) -> None:
         """Perform any activity required for starting measurements."""
@@ -204,7 +223,28 @@ class RunnerConfig:
 
         output.console_log("Config.interact() called!")
 
-        # TODO: Wait for SLURM job to finish, by polling slurm job status
+        job_name = context.run_variation['__run_id']
+
+        # Wait for SLURM job to finish
+        status = status = self.get_job_status()
+        wait_delay = 60
+        while status != "COMPLETED":
+            if status == "FAILED":
+                output.console_log_FAIL(f"Job {job_name} failed")
+                return
+                
+            if status == "DEADLINE":
+                output.console_log_FAIL(f"Job {job_name} exceeded time limit")
+                return
+
+            if status != "RUNNING":
+                output.console_log_WARNING(f"Job {job_name} in unknown state {status}")
+
+            output.console_log(f"Waiting {wait_delay} seconds for job {job_name} to finish, current status: {status}")
+            time.sleep(wait_delay)
+            status = status = self.get_job_status()
+
+        output.console_log(f"Job {job_name} successfully started")
 
     def stop_measurement(self, context: RunnerContext) -> None:
         """Perform any activity here required for stopping measurements."""
