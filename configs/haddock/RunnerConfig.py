@@ -115,11 +115,16 @@ class RunnerConfig:
         return value
 
     def slurm_get_job_status(self) -> str:
+        """Retrieves and returns the current job's status."""
         cmd = shlex.split(f"{self.ROOT_DIR / 'get-job-status.sh'} {self.job_id}")
 
         return subprocess.check_output(cmd).decode()[:-1]
 
     def slurm_wait_for_status(self, status_options: List[str], wait_delay: int = 5) -> bool:
+        """Waits for the current job's status to change its status to one provided in status_option.
+        Rechecks every wait_delay seconds. Returns True if the status is in status_option, False if the job 
+        reached an erroneous state."""
+
         cur_status = self.slurm_get_job_status()
         error_states = ("FAILED",  "CANCELLED", "DEADLINE", "REVOKED", "STOPPED", "SUSPENDED", "TIMEOUT")
 
@@ -179,17 +184,17 @@ class RunnerConfig:
 
         output.console_log("Config.before_run() called!")
 
-    def start_run(self, context: RunnerContext) -> None:
-        """Perform any activity required for starting the run here.
-        For example, starting the target system to measure.
-        Activities after starting the run should also be performed here."""
-        output.console_log("Config.start_run() called!")
+    def create_slurm_job_script(self, context: RunnerContext) -> Path:
+        """ Creates a slurm batch script from the given context.
+        Returns the path of the created script."""
 
+        # Load the template
         slurm_job_template = self.ROOT_DIR / 'slurm-job-template.sh'
         if not slurm_job_template.exists():
             raise FileNotFoundError(f"Slurm job template {slurm_job_template} not found")
         slurm_job_template = Template(slurm_job_template.read_text())
 
+        # Extract run data
         run_id = context.run_variation['__run_id']
         cpus_per_task = 8 if context.run_variation['treatment'] == 'parallel' else 32
         worker_shared_dir = Path(self.get_environment_variable('WORKER_NODE_SHARED_DIR'))
@@ -208,13 +213,31 @@ class RunnerConfig:
             haddock3_venv_dir = self.get_environment_variable('WORKER_NODE_HADDOCK_VENV_DIR'),
         )
 
-        self.slurm_job_script_path = self.slurm_scripts_dir / f"{run_id}.sh"
-        self.slurm_job_script_path.write_text(slurm_job_script)
+        # Write the new script file
+        slurm_job_script_path = self.slurm_scripts_dir / f"{run_id}.sh"
+        slurm_job_script_path.write_text(slurm_job_script)
 
-        # Submit SLURM job
-        output.console_log(f"Submitting SLURM job {self.slurm_job_script_path}")
-        success = subprocess.check_output(shlex.split(f"sbatch {self.slurm_job_script_path}")).decode()
-        self.job_id = int(success.split()[-1])
+        return slurm_job_script_path
+
+    def submit_slurm_job(self, slurm_job_script_path: Path) -> int:
+        """Enqueues the specified slurm job script.
+        Returns the ID of the submitted job."""
+
+        success = subprocess.check_output(shlex.split(f"sbatch {slurm_job_script_path}")).decode()
+        job_id = int(success.split()[-1])
+
+        return job_id
+
+    def start_run(self, context: RunnerContext) -> None:
+        """Perform any activity required for starting the run here.
+        For example, starting the target system to measure.
+        Activities after starting the run should also be performed here."""
+        output.console_log("Config.start_run() called!")
+
+        slurm_job_script_path = self.create_slurm_job_script(context)
+
+        self.job_id = self.submit_slurm_job(slurm_job_script_path)
+
         output.console_log(f"Batch job started with job ID {self.job_id}")
 
         # Wait for the job to start running
@@ -223,7 +246,7 @@ class RunnerConfig:
             self.failed = True
             return
 
-        output.console_log(f"Job {run_id} successfully started")
+        output.console_log(f"Job {self.job_id} successfully started")
 
     def start_measurement(self, context: RunnerContext) -> None:
         """Perform any activity required for starting measurements."""
@@ -237,14 +260,12 @@ class RunnerConfig:
         if self.failed:
             return
 
-        job_name = context.run_variation['__run_id']
-
         # Wait for SLURM job to finish
         if not self.slurm_wait_for_status(["COMPLETED"], wait_delay=30):
             output.console_log_FAIL(f"Job {self.job_id} failed!")
             self.failed = True
             return
-        output.console_log(f"Job {job_name} completed successfully")
+        output.console_log(f"Job {self.job_id} completed successfully")
 
     def stop_measurement(self, context: RunnerContext) -> None:
         """Perform any activity here required for stopping measurements."""
