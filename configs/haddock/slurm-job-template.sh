@@ -2,10 +2,10 @@
 #SBATCH --job-name=${job_name}
 #SBATCH --output=${shared_dir}/out/${job_name}.out
 #SBATCH --error=${shared_dir}/out/${job_name}.err
-#SBATCH --cpus-per-task=${cpus_per_task}
-#SBATCH --ntasks=$ntasks
-#SBATCH --time=02:00:00
+#SBATCH --time=00:00:05
 #SBATCH --nodelist=$node
+#SBATCH --ntasks=$ntasks
+#SBATCH --cpus-per-task=${cpus_per_task}
 
 cd ${working_dir}
 
@@ -18,14 +18,15 @@ cp -r ${shared_dir}/jobs/${cfg_dir} ${working_dir}
 cd ${working_dir}/${cfg_dir}
 
 # Create N copies of the config, which each have a unique run directory, to avoid interference
-for ((i = 0 ; i < $ntasks ; i++)); do
+for ((i = 1 ; i <= ${total_tasks} ; i++)); do
     RUN_DIR=run$i NCORES=${cpus_per_task} envsubst < ${cfg_file} > ${job_name}-$i.cfg
 done
 
-# Run the haddock3 workflow, %t is the index of the task (0 to N) being executed.
-# $SLURM_PROCID is this same index, but of the actual worker job, after it has started,
-# which is what allows us to get it inside the bash command.
-srun --output=${shared_dir}/out/${job_name}-%t.out  bash -c 'haddock3 ${job_name}-$SLURM_PROCID.cfg'
+# Run the haddock3 workflows, i is the index of the task (1 to total_tasks) being executed
+for ((i = 1 ; i <= ${total_tasks} ; i++)); do
+    srun --exclusive --ntasks=1 --output=${shared_dir}/out/${job_name}-$i.out bash -c "haddock3 ${job_name}-$i.cfg" &
+done
+wait
 
 # Cleanup
 rm -rf ${working_dir}/${cfg_dir}

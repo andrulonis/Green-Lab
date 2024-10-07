@@ -115,25 +115,26 @@ class RunnerConfig:
         return value
 
     def slurm_get_job_status(self) -> str:
-        """Retrieves and returns the current job's status."""
+        """Retrieves and returns a set of the current batch jobs' statuses."""
         cmd = shlex.split(f"{self.ROOT_DIR / 'get-job-status.sh'} {self.job_id}")
 
-        return subprocess.check_output(cmd).decode()[:-1]
+        return set(subprocess.check_output(cmd).decode()[:-1].split())
 
-    def slurm_wait_for_status(self, status_options: List[str], wait_delay: int = 5) -> bool:
+    def slurm_wait_for_status(self, status_options: List[str], wait_delay: int = 5, exclusive: bool = False) -> bool:
         """Waits for the current job's status to change its status to one provided in status_option.
         Rechecks every wait_delay seconds. Returns True if the status is in status_option, False if the job 
-        reached an erroneous state."""
+        reached an erroneous state. If exclusive is true, all subtasks of the job must be one of status_options to be valid."""
 
         cur_status = self.slurm_get_job_status()
-        error_states = ("FAILED",  "CANCELLED", "DEADLINE", "REVOKED", "STOPPED", "SUSPENDED", "TIMEOUT")
+        error_states = {"FAILED",  "CANCELLED", "DEADLINE", "REVOKED", "STOPPED", "SUSPENDED", "TIMEOUT"}
+        status_options = set(status_options)
 
-        while cur_status not in status_options:
-            if cur_status in error_states:
-                output.console_log_FAIL(f"Job {self.job_id} failed with status {cur_status}")
+        while (cur_status - status_options if exclusive else not cur_status & status_options):
+            if cur_status & error_states:
+                output.console_log_FAIL(f"Job {self.job_id} failed with status {' and '.join(cur_status & error_states)}")
                 return False
 
-            output.console_log(f"Waiting {wait_delay} seconds for status {' or '.join(status_options)} on job {self.job_id}, current status: {cur_status}")
+            output.console_log(f"Waiting {wait_delay} seconds for status {' or '.join(status_options)} on job {self.job_id}, current status: {' and '.join(cur_status)}")
             time.sleep(wait_delay)
             cur_status = self.slurm_get_job_status()
 
@@ -238,6 +239,7 @@ class RunnerConfig:
         slurm_job_script = slurm_job_template.safe_substitute(
             job_name = run_id,
             cpus_per_task = cpus_per_task,
+            total_tasks = 4,
             ntasks = 1 if cpus_per_task == 32 else 4,
             shared_dir = worker_shared_dir,
             cfg_dir = haddock_job_dir,
@@ -293,7 +295,7 @@ class RunnerConfig:
             return
 
         # Wait for SLURM job to finish
-        if not self.slurm_wait_for_status(["COMPLETED"], wait_delay=5):
+        if not self.slurm_wait_for_status(["COMPLETED"], wait_delay=5, exclusive=True):
             self.failed = True
             return
         output.console_log_OK(f"Job {self.job_id} completed successfully")
@@ -321,8 +323,6 @@ class RunnerConfig:
         Invoked only once during the lifetime of the program."""
 
         output.console_log("Config.after_experiment() called!")
-
-        self.slurm_scripts_dir.rmdir()
 
     # ================================ DO NOT ALTER BELOW THIS LINE ================================
     experiment_path:            Path             = None
