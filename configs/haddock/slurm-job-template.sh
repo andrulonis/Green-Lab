@@ -2,7 +2,7 @@
 #SBATCH --job-name=${job_name}
 #SBATCH --output=${shared_dir}/out/${job_name}.out
 #SBATCH --error=${shared_dir}/out/${job_name}.err
-#SBATCH --time=00:00:05
+#SBATCH --time=03:00:00
 #SBATCH --nodelist=$node
 #SBATCH --ntasks=$ntasks
 #SBATCH --cpus-per-task=${cpus_per_task}
