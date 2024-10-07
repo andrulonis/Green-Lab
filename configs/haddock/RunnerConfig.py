@@ -163,17 +163,7 @@ class RunnerConfig:
 
         return False
 
-    def before_experiment(self) -> None:
-        """Perform any activity required before starting the experiment here
-        Invoked only once during the lifetime of the program."""
-
-        output.console_log("Config.before_experiment() called!")
-
-        # There should be a shared directory for storing results
-        self.shared_dir = self.ROOT_DIR / 'shared'
-        if not self.shared_dir.exists():
-            raise FileNotFoundError(f"Shared directory {self.shared_dir} not found, please follow the README instructions")
-
+    def copy_haddock_workflows(self):
         shared_cfg_dir = self.shared_dir / 'jobs'
         if not shared_cfg_dir.exists():
             shared_cfg_dir.mkdir()
@@ -185,12 +175,34 @@ class RunnerConfig:
 
             if not cfg_dir.exists():
                 raise FileNotFoundError(f"Directory {cfg_dir} not found")
+            if not (cfg_dir / 'data').exists():
+                raise Exception(f"Workflow {base_dir} is missing a data directory")
 
-            if cfg_dir_dest.exists():
-                continue
+            if not cfg_dir_dest.exists():
+                output.console_log(f"Created directory for HADDOCK job {base_dir}")
+                cfg_dir_dest.mkdir()
+
+            cfg_file, *rest = [*cfg_dir.glob("*.cfg")]
+            if rest:
+                raise Exception("Multiple cfg files present for workflow {base_dir}")
+            if cfg_file.name != RunnerConfig.HADDOCK_JOBS[base_dir]:
+                raise Exception("Mismatch between cfg filename and specifications")
 
             output.console_log(f"Copying {cfg_dir} to shared directory")
-            shutil.copytree(cfg_dir, cfg_dir_dest)     
+            shutil.copytree(cfg_dir, cfg_dir_dest, dirs_exist_ok=True)
+
+    def before_experiment(self) -> None:
+        """Perform any activity required before starting the experiment here
+        Invoked only once during the lifetime of the program."""
+
+        output.console_log("Config.before_experiment() called!")
+
+        # There should be a shared directory for storing results
+        self.shared_dir = self.ROOT_DIR / 'shared'
+        if not self.shared_dir.exists():
+            raise FileNotFoundError(f"Shared directory {self.shared_dir} not found, please follow the README instructions")        
+
+        self.copy_haddock_workflows()
 
         self.outfiles_dir = self.shared_dir / 'out'
         if self.create_or_clear_dir(self.outfiles_dir):
@@ -296,9 +308,6 @@ class RunnerConfig:
         Activities after stopping the run should also be performed here."""
         output.console_log("Config.stop_run() called!")
 
-        # Remove SLURM job script
-        self.slurm_job_script_path.unlink()
-
     def populate_run_data(self, context: RunnerContext) -> Optional[Dict[str, SupportsStr]]:
         """Parse and process any measurement data here.
         You can also store the raw measurement data under `context.run_dir`
@@ -312,6 +321,8 @@ class RunnerConfig:
         Invoked only once during the lifetime of the program."""
 
         output.console_log("Config.after_experiment() called!")
+
+        self.slurm_scripts_dir.rmdir()
 
     # ================================ DO NOT ALTER BELOW THIS LINE ================================
     experiment_path:            Path             = None
