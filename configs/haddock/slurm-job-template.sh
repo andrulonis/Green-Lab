@@ -19,7 +19,7 @@ cd ${working_dir}/${cfg_dir}
 
 # Create N copies of the config, which each have a unique run directory, to avoid interference
 for ((i = 1 ; i <= ${total_tasks} ; i++)); do
-    RUN_DIR=run$i NCORES=${cpus_per_task} envsubst < ${cfg_file} > ${job_name}-$i.cfg
+    RUN_DIR="${job_name}-$i" NCORES=${cpus_per_task} envsubst < ${cfg_file} > ${job_name}-$i.cfg
 done
 
 # Run the haddock3 workflows, i is the index of the task (1 to total_tasks) being executed
