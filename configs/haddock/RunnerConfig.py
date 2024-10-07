@@ -130,6 +130,7 @@ class RunnerConfig:
 
         while cur_status not in status_options:
             if cur_status in error_states:
+                output.console_log_FAIL(f"Job {self.job_id} failed with status {cur_status}")
                 return False
 
             output.console_log(f"Waiting {wait_delay} seconds for status {' or '.join(status_options)} on job {self.job_id}, current status: {cur_status}")
@@ -137,6 +138,30 @@ class RunnerConfig:
             cur_status = self.slurm_get_job_status()
 
         return True
+
+    def create_or_clear_dir(self, dir: Path, ask_for_confirmation = True) -> bool:
+        """Removed all files in directory specified by `dir`, or creates the directory if it does not yet exist.
+        Asks the user for confirmation unless `ask_for_confirmation` is set to `False`.
+        Returns true if the directory was newly created, false otherwise. Raises an exception if the user did not agree."""
+        agree = True
+
+        if not dir.exists():
+            dir.mkdir()
+            return True
+
+        if not any(dir.iterdir()):
+            return False
+
+        if ask_for_confirmation:
+            agree = output.query_yes_no(f"Directory {dir} already contains files which will be deleted, continue?", default="no")
+
+        if not agree:
+            raise Exception("Aborting")
+
+        for child in dir.iterdir():
+            child.unlink()
+
+        return False
 
     def before_experiment(self) -> None:
         """Perform any activity required before starting the experiment here
@@ -162,20 +187,17 @@ class RunnerConfig:
                 raise FileNotFoundError(f"Directory {cfg_dir} not found")
 
             if cfg_dir_dest.exists():
-                output.console_log_WARNING(f"{cfg_dir_dest} already exists, skipping copy")
                 continue
 
             output.console_log(f"Copying {cfg_dir} to shared directory")
             shutil.copytree(cfg_dir, cfg_dir_dest)     
 
-        outfiles_dir = self.shared_dir / 'out'
-        if not outfiles_dir.exists():
-            outfiles_dir.mkdir()
-            output.console_log(f"Created HADDOCK output directory: {outfiles_dir}")
+        self.outfiles_dir = self.shared_dir / 'out'
+        if self.create_or_clear_dir(self.outfiles_dir):
+            output.console_log(f"Created HADDOCK output files directory {self.outfiles_dir}")
 
         self.slurm_scripts_dir = self.ROOT_DIR / 'slurm-scripts'
-        if not self.slurm_scripts_dir.exists():
-            self.slurm_scripts_dir.mkdir()
+        if self.create_or_clear_dir(self.slurm_scripts_dir):
             output.console_log(f"Created SLURM scripts directory: {self.slurm_scripts_dir}")
 
     def before_run(self) -> None:
@@ -234,19 +256,17 @@ class RunnerConfig:
         Activities after starting the run should also be performed here."""
         output.console_log("Config.start_run() called!")
 
-        slurm_job_script_path = self.create_slurm_job_script(context)
-
-        self.job_id = self.submit_slurm_job(slurm_job_script_path)
+        self.slurm_job_script_path = self.create_slurm_job_script(context)
+        self.job_id = self.submit_slurm_job(self.slurm_job_script_path)
 
         output.console_log(f"Batch job started with job ID {self.job_id}")
 
         # Wait for the job to start running
         if not self.slurm_wait_for_status(["RUNNING", "COMPLETED"]):
-            output.console_log_FAIL(f"Job {self.job_id} failed!")
             self.failed = True
             return
 
-        output.console_log(f"Job {self.job_id} successfully started")
+        output.console_log_OK(f"Job {self.job_id} successfully started")
 
     def start_measurement(self, context: RunnerContext) -> None:
         """Perform any activity required for starting measurements."""
@@ -261,11 +281,10 @@ class RunnerConfig:
             return
 
         # Wait for SLURM job to finish
-        if not self.slurm_wait_for_status(["COMPLETED"], wait_delay=30):
-            output.console_log_FAIL(f"Job {self.job_id} failed!")
+        if not self.slurm_wait_for_status(["COMPLETED"], wait_delay=5):
             self.failed = True
             return
-        output.console_log(f"Job {self.job_id} completed successfully")
+        output.console_log_OK(f"Job {self.job_id} completed successfully")
 
     def stop_measurement(self, context: RunnerContext) -> None:
         """Perform any activity here required for stopping measurements."""

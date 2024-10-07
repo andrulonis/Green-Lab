@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=${job_name}
-#SBATCH --output=${job_name}.out
+#SBATCH --output=${shared_dir}/out/${job_name}.out
+#SBATCH --error=${shared_dir}/out/${job_name}.err
 #SBATCH --cpus-per-task=${cpus_per_task}
 #SBATCH --ntasks=$ntasks
 #SBATCH --time=00:00:05
@@ -17,14 +18,8 @@ cp -r ${shared_dir}/jobs/${cfg_dir} ${working_dir}
 cd ${working_dir}/${cfg_dir}
 
 # Run the haddock3 workflow
-haddock3 ${cfg_file} &
-haddock3 ${cfg_file} &
-haddock3 ${cfg_file} &
-haddock3 ${cfg_file} &
-wait
+srun --output=${shared_dir}/out/${job_name}-%t.out haddock3 ${cfg_file}
 
 # Cleanup
 rm -rf ${working_dir}/${cfg_dir}
 
-# Copy the output to the shared directory
-cp ${out_file} ${shared_dir}/out
