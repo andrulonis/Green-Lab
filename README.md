@@ -73,9 +73,33 @@ touch ~/shared/test
 
 Read it on `S1` to confirm that the NFS write worked.
 
-#### 2.3 Energibridge
+#### 2.3 EnergiBridge
 
-Make sure [energibridge](https://github.com/tdurieux/EnergiBridge) is installed on `S2` and added to PATH. Energibridge must be configured to be executable by the current user _without root_, i.e. follow the instructions on the energibridge repo to setup the `msr` group and add your user to it.
+Make sure [EnergiBridge](https://github.com/tdurieux/EnergiBridge) is installed on `S2` and added to PATH. Follow the instructions on the README of the EnergiBridge repository.
+
+### 3. Permissions
+
+Energibridge must be configured to be executable by the current user _without root_, i.e. follow the instructions on the energibridge repo to setup the `msr` group. This part is a bit tricky, since SLURM listens to the group IDS set on the user that is enqueueing SLURM jobs, in our case the user running experiment runner on `S1`. Therefore, to execute energibridge without root, we must add the user on `S1` to a group `msr`, that **has the same group ID** as the one on `S2`. 
+
+After following the README instructions for EnergiBridge:
+1. On `S1`, create group `msr`:
+
+    ```sh
+    sudo groupadd msr
+    ```
+
+2. On `S1` and `S2`, get the GID of group `msr`:
+
+    ```sh
+    getent group msr | cut -d: -f3
+    ```
+
+3. If the group IDs are equal, you are done. If not, we must update `S1`'s `msr` GID to be the same as the one on `S2`. Replace `<MSR_GID_S2>` with the GID of the `msr` group on `S2`, and execute the command on `S1`.
+
+    ```sh
+    groupmod -g <NEW_GID> msr
+    newgrp msr
+    ```
 
 ## Running
 
