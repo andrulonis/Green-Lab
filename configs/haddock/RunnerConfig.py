@@ -295,7 +295,7 @@ class RunnerConfig:
             return
 
         # Wait for SLURM job to finish
-        if not self.slurm_wait_for_status(["COMPLETED"], wait_delay=5, exclusive=True):
+        if not self.slurm_wait_for_status(["COMPLETED"], wait_delay=60, exclusive=True):
             self.failed = True
             return
         output.console_log_OK(f"Job {self.job_id} completed successfully")
