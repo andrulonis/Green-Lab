@@ -73,6 +73,10 @@ touch ~/shared/test
 
 Read it on `S1` to confirm that the NFS write worked.
 
+#### 2.3 Energibridge
+
+Make sure [energibridge](https://github.com/tdurieux/EnergiBridge) is installed on `S2` and added to PATH. Energibridge must be configured to be executable by the current user _without root_, i.e. follow the instructions on the energibridge repo to setup the `msr` group and add your user to it.
+
 ## Running
 
 In this section we assume as the current working directory the root directory of the project and that the virtual environment is activated, if you made one.
