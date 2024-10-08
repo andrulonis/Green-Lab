@@ -24,7 +24,6 @@ done
 
 # Run the haddock3 workflows, i is the index of the task (1 to total_tasks) being executed
 for ((i = 1 ; i <= ${total_tasks} ; i++)); do
-    # srun --exclusive --ntasks=1 --output=${shared_dir}/out/${job_name}-$i.out bash -c "haddock3 ${job_name}-$i.cfg" &
     srun --exclusive --ntasks=1 bash -c \
         "energibridge \
          --command-output=${shared_dir}/out/${job_name}-$i.out \
