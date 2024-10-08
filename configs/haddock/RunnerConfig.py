@@ -206,15 +206,18 @@ class RunnerConfig:
         self.copy_haddock_workflows()
 
         self.outfiles_dir = self.shared_dir / 'out'
-        if self.create_or_clear_dir(self.outfiles_dir):
+        if not self.outfiles_dir.exists():
+            self.outfiles_dir.mkdir()
             output.console_log(f"Created HADDOCK output files directory {self.outfiles_dir}")
 
-        self.outfiles_dir = self.shared_dir / 'results'
-        if self.create_or_clear_dir(self.outfiles_dir):
-            output.console_log(f"Created EnergiBridge output files directory {self.outfiles_dir}")
+        self.results_dir = self.shared_dir / 'results'
+        if not self.results_dir.exists():
+            self.results_dir.mkdir()
+            output.console_log(f"Created EnergiBridge output files directory {self.results_dir}")
 
         self.slurm_scripts_dir = self.ROOT_DIR / 'slurm-scripts'
-        if self.create_or_clear_dir(self.slurm_scripts_dir):
+        if not self.slurm_scripts_dir.exists():
+            self.slurm_scripts_dir.mkdir()
             output.console_log(f"Created SLURM scripts directory: {self.slurm_scripts_dir}")
 
     def before_run(self) -> None:
