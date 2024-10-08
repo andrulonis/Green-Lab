@@ -209,6 +209,10 @@ class RunnerConfig:
         if self.create_or_clear_dir(self.outfiles_dir):
             output.console_log(f"Created HADDOCK output files directory {self.outfiles_dir}")
 
+        self.outfiles_dir = self.shared_dir / 'results'
+        if self.create_or_clear_dir(self.outfiles_dir):
+            output.console_log(f"Created EnergiBridge output files directory {self.outfiles_dir}")
+
         self.slurm_scripts_dir = self.ROOT_DIR / 'slurm-scripts'
         if self.create_or_clear_dir(self.slurm_scripts_dir):
             output.console_log(f"Created SLURM scripts directory: {self.slurm_scripts_dir}")
