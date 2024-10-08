@@ -97,7 +97,7 @@ After following the README instructions for EnergiBridge:
 3. If the group IDs are equal, you are done. If not, we must update `S1`'s `msr` GID to be the same as the one on `S2`. Replace `<MSR_GID_S2>` with the GID of the `msr` group on `S2`, and execute the command on `S1`.
 
     ```sh
-    groupmod -g <NEW_GID> msr
+    groupmod -g <MSR_GID_S2> msr
     newgrp msr
     ```
 
