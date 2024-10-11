@@ -63,6 +63,6 @@ for (run in 1:nrow(data)) {
       cpu_means[row_id] = mean(data_rq3[[run, rep]][row_id, cpu_columns])
     }
       cpu_mean_usage[[run,rep]] = as.list(cpu_means)
-      energy_usage[[run,rep]] = as.list(data_rq3[[run,rep]][,"PACKAGE_ENERGY..J."])
+      energy_usage[[run,rep]] = as.list(diff(data_rq3[[run,rep]][,"PACKAGE_ENERGY..J."]))
   }
 }
