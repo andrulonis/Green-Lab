@@ -79,7 +79,7 @@ Make sure [EnergiBridge](https://github.com/tdurieux/EnergiBridge) is installed 
 
 ### 3. Permissions
 
-Energibridge must be configured to be executable by the current user _without root_, i.e. follow the instructions on the energibridge repo to setup the `msr` group. This part is a bit tricky, since SLURM listens to the group IDS set on the user that is enqueueing SLURM jobs, in our case the user running experiment runner on `S1`. Therefore, to execute energibridge without root, we must add the user on `S1` to a group `msr`, that **has the same group ID** as the one on `S2`. 
+Energibridge must be configured to be executable by the current user _without root_. First, follow the instructions on the energibridge repo to setup the `msr` group. The next part is a bit tricky, since SLURM listens to the group IDs set on the user that is enqueueing SLURM jobs, in our case the user running experiment runner on `S1`. Therefore, to execute energibridge without root, we must add the user on `S1` to a group `msr`, that **has the same group ID** as the one on `S2`. 
 
 After following the README instructions for EnergiBridge:
 1. On `S1`, create group `msr`:
