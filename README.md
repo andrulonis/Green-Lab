@@ -118,3 +118,31 @@ The results of the experiment will be stored in the directory `configs/haddock/e
 
 Note that once you successfully run an experiment, the framework will not allow you to run the same experiment again. Remove the `experiments` directory under `configs/haddock/experiments` if you are sure you want to restart the experiment.
 
+## Data extraction
+
+We provide an R script to extract the data from the experiment's output files [here](r-scripts/analyse-data.R). 
+
+### 1. Install R
+
+TODO: install R studio or R?
+
+### 2. Running the script
+
+To use the script, first the output files must be copied to the `r-scripts/results-data` directory. This directory currently contains the result files from our experiment run and can be used as a reference/example. If you want to use your own result files, first delete the existing files:
+
+```sh
+rm r-scripts/results-data/*
+```
+
+Then, after running the experiment, run the following command to copy over the result files:
+
+```sh
+cp configs/haddock/experiments/HPC_Haddock/*/* r-scripts/results-data
+```
+
+Then run the R script:
+
+```sh
+TODO: RScript or through RStudio?
+```
+
