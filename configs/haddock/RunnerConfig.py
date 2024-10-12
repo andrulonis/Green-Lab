@@ -323,6 +323,11 @@ class RunnerConfig:
         Returns a dictionary with keys `self.run_table_model.data_columns` and their values populated"""
 
         output.console_log("Config.populate_run_data() called!")
+
+        final_results_output_path = self.results_output_path / self.name /  context.run_variation['__run_id']
+        for result_file in self.results_dir.glob(f"{context.run_variation['__run_id']}-[1-4].csv"):
+            shutil.copy(result_file, final_results_output_path / result_file.name)
+
         return None
 
     def after_experiment(self) -> None:
