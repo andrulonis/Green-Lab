@@ -140,9 +140,6 @@ Then, after running the experiment, run the following command to copy over the r
 cp configs/haddock/experiments/HPC_Haddock/*/* r-scripts/results-data
 ```
 
-Then run the R script:
+Then run the R script inside RStudio by opening it and then pressing: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>.
 
-```sh
-TODO: RScript or through RStudio?
-```
 
