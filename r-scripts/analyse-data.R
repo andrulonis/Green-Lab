@@ -1,4 +1,5 @@
 library("tidyverse")
+library("ggplot2")
 setwd(paste(dirname(rstudioapi::getSourceEditorContext()$path), "/results-data",sep = ""))
 options(digits = 22)
 
@@ -66,3 +67,48 @@ for (run in 1:nrow(data)) {
       energy_usage[[run,rep]] = as.list(diff(data_rq3[[run,rep]][,"PACKAGE_ENERGY..J."]))
   }
 }
+
+
+# Combine data to be stored in one dataframe
+"
+Run:  |    0    |   1   |   2   |   3   |   4   |   5   |
+Job:  |   dpd   |  dpd  |  dpp  |  dpp  |  pc   |  pc   |
+Mode: |   seq   |  para |  seq  |  para |  seq  | para  |
+"
+
+job_types <- c("docking-protein-DNA",
+               "docking-protein-protein",
+               "cyclise-peptide")
+modes <- c("sequential", "parallel")
+
+df_total <- data.frame(
+  JobType = character(),
+  Mode = character(),
+  Run = numeric(),
+  AvgCPU = numeric(),
+  AvgMem = numeric(),
+  ExecTime = numeric(),
+  TotalEnergy = numeric(),
+  stringsAsFactors = FALSE
+)
+
+counter <- 1
+for (job in seq_along(job_types)) {
+  for (mode in seq_along(modes)) {
+    for (run in 1:ncol(avg_cpu)) {
+      entry <- data.frame(
+        JobType = job_types[job],
+        Mode = modes[mode],
+        Run = run,
+        AvgCPU = avg_cpu[counter, run],
+        AvgMem = avg_mem[counter, run],
+        ExecTime = execution_time[counter, run],
+        TotalEnergy = total_energy[counter, run]
+      )
+      df_total <- rbind(df_total, entry)
+    }
+      counter <- counter + 1
+  }
+}
+
+save(df_total, file = paste(dirname(rstudioapi::getSourceEditorContext()$path), "/out/df_total.RData", sep = ""))
