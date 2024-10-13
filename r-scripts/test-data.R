@@ -13,7 +13,6 @@ modes <- c("sequential", "parallel")
 
 
 # QQ-plot
-
 for (result in 4:7) {
   for (job in seq_along(job_types)) {
     data_mode1 <- df_total[[colnames(df_total)[result]]][df_total$JobType == job_types[job] &
