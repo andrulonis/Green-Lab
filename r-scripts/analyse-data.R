@@ -1,6 +1,10 @@
 library("tidyverse")
 library("ggplot2")
-setwd(paste(dirname(rstudioapi::getSourceEditorContext()$path), "/results-data",sep = ""))
+setwd(paste(
+  dirname(rstudioapi::getSourceEditorContext()$path),
+  "/results-data",
+  sep = ""
+))
 options(digits = 22)
 
 data = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
@@ -25,7 +29,8 @@ for (file in list.files(getwd())) {
 
 for (seq_run in seq(from = 1, to = 5, by = 2)) {
   for (rep in 1:ncol(data)) {
-    if (!is.null(data[[seq_run, rep]]) && nrow(data[[seq_run, rep]]) > 0) {
+    if (!is.null(data[[seq_run, rep]]) &&
+        nrow(data[[seq_run, rep]]) > 0) {
       data_rq3[[seq_run, rep]] <- data[[seq_run, rep]][order(data[[seq_run, rep]][, "Time"]), ]
     }
   }
@@ -36,14 +41,14 @@ execution_time = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
 avg_mem = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
 avg_cpu = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
 
-cpu_columns <- grep("^CPU_USAGE_", colnames(data[[1,1]]))
+cpu_columns <- grep("^CPU_USAGE_", colnames(data[[1, 1]]))
 
 for (run in 1:nrow(data)) {
   for (rep in 1:ncol(data)) {
-      total_energy[[run,rep]] = max(data[[run,rep]][,"PACKAGE_ENERGY..J."]) - min(data[[run,rep]][,"PACKAGE_ENERGY..J."])
-      execution_time[[run,rep]] = max(data[[run,rep]][,"Time"]) - min(data[[run,rep]][,"Time"])
-      avg_mem[[run,rep]] = mean(data[[run,rep]][,"USED_MEMORY"])
-      avg_cpu[[run,rep]] = mean(data[[run,rep]][,cpu_columns])
+    total_energy[[run, rep]] = max(data[[run, rep]][, "PACKAGE_ENERGY..J."]) - min(data[[run, rep]][, "PACKAGE_ENERGY..J."])
+    execution_time[[run, rep]] = max(data[[run, rep]][, "Time"]) - min(data[[run, rep]][, "Time"])
+    avg_mem[[run, rep]] = mean(data[[run, rep]][, "USED_MEMORY"])
+    avg_cpu[[run, rep]] = mean(data[[run, rep]][, cpu_columns])
   }
 }
 
@@ -63,8 +68,8 @@ for (run in 1:nrow(data)) {
     for (row_id in 1:num_rows) {
       cpu_means[row_id] = mean(data_rq3[[run, rep]][row_id, cpu_columns])
     }
-      cpu_mean_usage[[run,rep]] = as.list(cpu_means)
-      energy_usage[[run,rep]] = as.list(diff(data_rq3[[run,rep]][,"PACKAGE_ENERGY..J."]))
+    cpu_mean_usage[[run, rep]] = as.list(cpu_means)
+    energy_usage[[run, rep]] = as.list(diff(data_rq3[[run, rep]][, "PACKAGE_ENERGY..J."]))
   }
 }
 
@@ -107,8 +112,57 @@ for (job in seq_along(job_types)) {
       )
       df_total <- rbind(df_total, entry)
     }
-      counter <- counter + 1
+    counter <- counter + 1
   }
 }
 
-save(df_total, file = paste(dirname(rstudioapi::getSourceEditorContext()$path), "/out/df_total.RData", sep = ""))
+save(df_total, file = paste(
+  dirname(rstudioapi::getSourceEditorContext()$path),
+  "/out/df_total.RData",
+  sep = ""
+))
+
+# Calculate the means over repetition
+
+avg_cpu_all <- list()
+
+counter = 1
+for (job in seq_along(job_types)) {
+  for (mode in seq_along(modes)) {
+    lengths = list()
+    for (i in 1:10) {
+      lengths[[i]] <- length(cpu_mean_usage[[counter, i]])
+    }
+    min_length <- min(unlist(lengths))
+    formated <- cbind(as.numeric(cpu_mean_usage[[counter, 1]])[1:min_length])
+    for (i in 2:10) {
+      formated <- cbind(formated, as.numeric(cpu_mean_usage[[counter, i]])[1:min_length])
+    }
+    
+    avg_cpu_all[[paste(job_types[job], modes[mode], sep = "_")]] <- rowMeans(formated)
+    
+    counter = counter + 1
+    
+  }
+}
+
+
+# Just for plotting (ignore)
+par(mfrow = c(2, 3))
+for (list in seq_along(avg_cpu_all)) {
+  plot(
+    avg_cpu_all[[list]],
+    type = "l",
+    col = "blue",
+    lwd = 1,
+    xlab = "Time",
+    ylab = "CPU Usage",
+    main = names(avg_cpu_all)[list]
+  )
+}
+
+save(avg_cpu_all, file = paste(
+  dirname(rstudioapi::getSourceEditorContext()$path),
+  "/out/avg_cpu_all.RData",
+  sep = ""
+))
