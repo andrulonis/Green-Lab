@@ -96,10 +96,7 @@ for (metric in metrics) {
       # Write to file
       cat(sprintf("%s of %s job with %s execution:\n", metric, job, mode), file = filePath, append = TRUE)
       cat(sprintf("Shapiro-Wilk normality test gave p-value = %.8f ", shapiro_test$p.value), file = filePath, append = TRUE)
-      cat(sprintf(
-        ">>> %s\n\n", 
-        ifelse(shapiro_results$Distribution[nrow(shapiro_results)], "Normal", "Not normal")
-      ), file = filePath, append = TRUE)
+      cat(sprintf( ">>> %s\n\n", ifelse(shapiro_results$IsNormal[nrow(shapiro_results)], "Normal", "Not normal")), file = filePath, append = TRUE)
     }
   }
 }
