@@ -1,3 +1,11 @@
+# Load data from analyse-data.R
+
+load(paste(
+  dirname(rstudioapi::getSourceEditorContext()$path),
+  "/out/df_total.RData",
+  sep = ""
+))
+
 job_types <- c("docking-protein-DNA",
                "docking-protein-protein",
                "cyclise-peptide")
@@ -8,7 +16,7 @@ printAndSafe <- function(x, filePath) {
   cat(x, file = filePath, append = TRUE)
 }
 
-msToMinutes <- function(ms) {
+msToMins <- function(ms) {
   return(ms / 60000)
 }
 
@@ -26,17 +34,21 @@ filePath = paste(
 
 printAndSafe("Hypothesis 1", filePath)
 for (job in seq_along(job_types)) {
-  avg_energy_seq <- mean(df_total$TotalEnergy[df_total$JobType == job_types[job] &
-                                                df_total$Mode == modes[1]])
-  avg_energy_para <- mean(df_total$TotalEnergy[df_total$JobType == job_types[job] &
-                                                 df_total$Mode == modes[2]])
+  energy_seq <- df_total$TotalEnergy[df_total$JobType == job_types[job] &
+                                       df_total$Mode == modes[1]]
+  energy_para <- df_total$TotalEnergy[df_total$JobType == job_types[job] &
+                                        df_total$Mode == modes[2]]
   
   printAndSafe(paste("\n\nAverage energy usage for", job_types[job]), filePath)
-  printAndSafe(paste("\nSequential:", avg_energy_seq, "J"), filePath)
-  printAndSafe(paste("\nParallel:", avg_energy_para, "J"), filePath)
-  printAndSafe(paste("\nDifference:", max(avg_energy_seq, avg_energy_para) - min(avg_energy_seq, avg_energy_para), "J"), filePath)
-  result <- (max(avg_energy_seq, avg_energy_para) - min(avg_energy_seq, avg_energy_para)) < 50
-  printAndSafe(paste("\n\n>>> Null hypothesis is", result), filePath)
+  printAndSafe(paste("\nSequential:", mean(energy_seq), "J"), filePath)
+  printAndSafe(paste("\nParallel:", mean(energy_para), "J"), filePath)
+  
+  # TODO: Check for normality and do either t-test or 
+  t_test <- t.test(energy_seq,
+                   energy_para,
+                   paired = TRUE,)
+  
+  printAndSafe(capture.output(t_test), filePath)
 }
 
 
@@ -50,42 +62,52 @@ filePath = paste(
 
 printAndSafe("Hypothesis 2\n", filePath)
 for (job in seq_along(job_types)) {
-  avg_exec_seq <- mean(df_total$ExecTime[df_total$JobType == job_types[job] &
-                                                df_total$Mode == modes[1]])
-  avg_exec_para <- mean(df_total$ExecTime[df_total$JobType == job_types[job] &
-                                                 df_total$Mode == modes[2]])
+  exec_time_seq <- df_total$ExecTime[df_total$JobType == job_types[job] &
+                                           df_total$Mode == modes[1]]
+  exec_time_para <- df_total$ExecTime[df_total$JobType == job_types[job] &
+                                            df_total$Mode == modes[2]]
   
-  avg_MEM_seq <- mean(df_total$AvgMem[df_total$JobType == job_types[job] &
-                                        df_total$Mode == modes[1]])
-  avg_MEM_para <- mean(df_total$AvgMem[df_total$JobType == job_types[job] &
-                                         df_total$Mode == modes[2]])
+  MEM_seq <- df_total$AvgMem[df_total$JobType == job_types[job] &
+                                        df_total$Mode == modes[1]]
+  MEM_para <- df_total$AvgMem[df_total$JobType == job_types[job] &
+                                         df_total$Mode == modes[2]]
   
-  avg_CPU_seq <- mean(df_total$AvgCPU[df_total$JobType == job_types[job] &
-                                           df_total$Mode == modes[1]])
-  avg_CPU_para <- mean(df_total$AvgCPU[df_total$JobType == job_types[job] &
-                                            df_total$Mode == modes[2]])
+  CPU_seq <- df_total$AvgCPU[df_total$JobType == job_types[job] &
+                                        df_total$Mode == modes[1]]
+  CPU_para <- df_total$AvgCPU[df_total$JobType == job_types[job] &
+                                         df_total$Mode == modes[2]]
   
   
   printAndSafe(paste("\n\nAverage execution time for", job_types[job]), filePath)
-  printAndSafe(paste("\nSequential:", msToMinutes(avg_exec_seq), "minutes"), filePath)
-  printAndSafe(paste("\nParallel:", msToMinutes(avg_exec_para), "minutes"), filePath)
-  printAndSafe(paste("\nDifference:", msToMinutes(max(avg_exec_seq, avg_exec_para) - min(avg_exec_seq, avg_exec_para)), "minutes"), filePath)
-  exec_result <- (max(avg_exec_seq, avg_exec_para) - min(avg_exec_seq, avg_exec_para)) < 1
+  printAndSafe(paste("\nSequential:", msToMins(mean(exec_time_seq)), "minutes"), filePath)
+  printAndSafe(paste("\nParallel:", msToMins(mean(exec_time_para)), "minutes"), filePath)
+
+  # TODO: Check normality and do either t-test or Wilcoxon
   
   printAndSafe(paste("\n\nAverage memory usage for", job_types[job]), filePath)
-  printAndSafe(paste("\nSequential:", bToGb(avg_MEM_seq), "GB"), filePath)
-  printAndSafe(paste("\nParallel:", bToGb(avg_MEM_para), "GB"), filePath)
-  printAndSafe(paste("\nDifference:", bToGb(max(avg_MEM_seq, avg_MEM_para) - min(avg_MEM_seq, avg_MEM_para)), "GB"), filePath)
-  mem_result <- (max(avg_MEM_seq, avg_MEM_para) - min(avg_MEM_seq, avg_MEM_para)) < 1
+  printAndSafe(paste("\nSequential:", bToGb(mean(MEM_seq)), "GB"), filePath)
+  printAndSafe(paste("\nParallel:", bToGb(mean(MEM_para)), "GB"), filePath)
+  
+  # TODO: Check normality and do either t-test or Wilcoxon
+
   
   printAndSafe(paste("\n\nAverage CPU usage for", job_types[job]), filePath)
-  printAndSafe(paste("\nSequential:", avg_CPU_seq, "%"), filePath)
-  printAndSafe(paste("\nParallel:", avg_CPU_para, "%"), filePath)
-  printAndSafe(paste("\nDifference:", max(avg_CPU_seq, avg_CPU_para) - min(avg_CPU_seq, avg_CPU_para), "%"), filePath)
-  cpu_result <- (max(avg_CPU_seq, avg_CPU_para) - min(avg_CPU_seq, avg_CPU_para)) < 5
+  printAndSafe(paste("\nSequential:", mean(CPU_seq), "%"), filePath)
+  printAndSafe(paste("\nParallel:", mean(CPU_seq), "%"), filePath)
+
+  # TODO: Check normality and do either t-test or Wilcoxon
   
-  printAndSafe(paste("\n\n>>> Null hypothesis is", exec_result && mem_result && cpu_result), filePath)
+  printAndSafe(
+    paste(
+      "\n\n>>> Null hypothesis is",
+      exec_result && mem_result && cpu_result
+    ),
+    filePath
+  )
 }
 
 # Hypothesis 3
+
+# TODO: Calculate all Pearson corr. coeffs., average them, compare them
+# Could be useful library: https://personality-project.org/r/psych/help/r.test.html
 

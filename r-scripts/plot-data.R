@@ -1,5 +1,12 @@
-# Boxplot, jitter, and violin plot
+# Load data from analyse-data.R
 
+load(paste(
+  dirname(rstudioapi::getSourceEditorContext()$path),
+  "/out/df_total.RData",
+  sep = ""
+))
+
+# Boxplot, jitter, and violin plot
 for (result in 4:7) {
   plot_total <- ggplot(df_total, aes(x = interaction(JobType, Mode), y = .data[[colnames(df_total)[result]]])) +
     geom_violin(trim = FALSE) +

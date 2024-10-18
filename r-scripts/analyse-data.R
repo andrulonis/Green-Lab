@@ -122,7 +122,7 @@ save(df_total, file = paste(
   sep = ""
 ))
 
-# Calculate the means over repetition
+# Calculate the means of CPU usage over repetition
 
 avg_cpu_all <- list()
 
@@ -146,18 +146,43 @@ for (job in seq_along(job_types)) {
   }
 }
 
+# TODO: Calculate the means of power usage over repetition
+# I don't know why, but this doesn't work yet
 
-# Just for plotting (ignore)
+energy_usage_all <- list()
+
+counter = 1
+for (job in seq_along(job_types)) {
+  for (mode in seq_along(modes)) {
+    lengths = list()
+    for (i in 1:10) {
+      lengths[[i]] <- length(energy_usage[[counter, i]])
+    }
+    min_length <- min(unlist(lengths))
+    formated <- cbind(as.numeric(energy_usage[[counter, 1]])[1:min_length])
+    for (i in 2:10) {
+      formated <- cbind(formated, as.numeric(energy_usage[[counter, i]])[1:min_length])
+    }
+    
+    energy_usage_all[[paste(job_types[job], modes[mode], sep = "_")]] <- rowMeans(formated)
+    
+    counter = counter + 1
+    
+  }
+}
+
+
+# TODO: Plotting overall means
 par(mfrow = c(2, 3))
-for (list in seq_along(avg_cpu_all)) {
+for (list in seq_along(energy_usage_all)) {
   plot(
-    avg_cpu_all[[list]],
+    energy_usage_all[[list]],
     type = "l",
     col = "blue",
     lwd = 1,
     xlab = "Time",
-    ylab = "CPU Usage",
-    main = names(avg_cpu_all)[list]
+    ylab = "Power Usage",
+    main = names(energy_usage_all)[list]
   )
 }
 

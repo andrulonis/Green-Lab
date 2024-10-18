@@ -13,6 +13,10 @@ modes <- c("sequential", "parallel")
 
 
 # QQ-plot
+
+par(mfrow = c(4, 3))
+all_qqplots <- list()
+counter <- 1
 for (result in 4:7) {
   for (job in seq_along(job_types)) {
     data_mode1 <- df_total[[colnames(df_total)[result]]][df_total$JobType == job_types[job] &
@@ -21,40 +25,39 @@ for (result in 4:7) {
     data_mode2 <- df_total[[colnames(df_total)[result]]][df_total$JobType == job_types[job] &
                                                            df_total$Mode == modes[2]]
     
-    qq_plot <- qqplot(
+    qqplot(
       data_mode1,
       data_mode2,
-      main = paste("QQ-Plot of", colnames(df_total)[result], "for", job_types[job]),
+      main = paste("QQ-Plot of", colnames(df_total)[result], "\nfor", job_types[job]),
       xlab = "Sequential",
       ylab = "Parallel"
     )
     
-    # Save the plots
-    png(
-      paste(
-        dirname(rstudioapi::getSourceEditorContext()$path),
-        "/out/plots/qq-plot-",
-        colnames(df_total)[result],
-        "-",
-        job_types[job],
-        ".png",
-        sep = ""
-      ),
-      width = 1200,
-      height = 800
-    )
+    # TODO: Check how to plot all diagrams on one page and save it
+    # png(
+    #   paste(
+    #     dirname(rstudioapi::getSourceEditorContext()$path),
+    #     "/out/plots/qq-plot-",
+    #     colnames(df_total)[result],
+    #     "-",
+    #     job_types[job],
+    #     ".png",
+    #     sep = ""
+    #   ),
+    #   width = 1200,
+    #   height = 800
+    # )
     
-    qq_plot <- qqplot(
-      data_mode1,
-      data_mode2,
-      main = paste("QQ-Plot of", colnames(df_total)[result], "for", job_types[job]),
-      xlab = "Sequential",
-      ylab = "Parallel"
-    )
     
-    dev.off()
+    
+    all_qqplots <- append(all_qqplots, qq_plot)
+    # 
+    # dev.off()
+    counter <- counter + 1
   }
 }
+
+par(mfrow = c(1, 1))
 
 # Shapiro-Wilk
 counter <- 1
@@ -75,6 +78,7 @@ for (job in seq_along(job_types)) {
     print(shapiro_test)
     cat(capture.output(shapiro_test), file = filePath, append = TRUE)
     
+    # TODO: Save that in the dataframe
     if (shapiro_test$p.value < 0.05){
       cat(">>> No normal distribution\n\n")
       cat(">>> No normal distribution\n\n", file = filePath, append = TRUE)
