@@ -2,10 +2,10 @@ library("car")
 
 # Load data from analyse-data.R
 
-load(paste(
+load(file.path(
   dirname(rstudioapi::getSourceEditorContext()$path),
-  "/out/df_total.RData",
-  sep = ""
+  "out",
+  "df_total.RData"
 ))
 
 job_types <- c("docking-protein-DNA",
@@ -20,15 +20,14 @@ df_total$TotalEnergy = df_total$TotalEnergy / 10^3
 
 # QQ-plot
 
-# png(
-#     paste(
-#       dirname(rstudioapi::getSourceEditorContext()$path),
-#       "/out/plots/qqplots.png",
-#       sep = ""
-#     ),
-#     width=1600,
-#     height=1200
-# )
+png(
+    file.path(
+      dirname(rstudioapi::getSourceEditorContext()$path),
+      "out", "plots", "qqplots.png"
+    ),
+    width=1600,
+    height=1200
+)
 par(mfrow=c(4,6), oma=c(1, 3, 5, 0), mar=c(1.75, 1.75, 1.75, 1.75))
 
 
@@ -36,7 +35,7 @@ for (metric in metrics) {
   for (job in job_types) {
     for (mode in modes) {
       data <- df_total[[metric]][df_total$JobType == job & df_total$Mode == mode]
-      
+
       qqPlot(
         data,
         ylab = "",
@@ -61,35 +60,71 @@ for (mode in seq(1, 6, 2)) {
 }
 
 
-# dev.off()
+dev.off()
 
 # Shapiro-Wilk
-filePath = paste(
-  dirname(rstudioapi::getSourceEditorContext()$path),
-  "/out/shapiro_results.txt",
-  sep = ""
+
+shapiro_results <- data.frame(
+  Metric = character(),
+  JobType = character(),
+  Mode = character(),
+  PValue = numeric(),
+  IsNormal = logical()
 )
-for (job in job_types) {
-  for (mode in modes) {
-    
-    data_job_mode <- df_total$AvgCPU[df_total$JobType == job & df_total$Mode == mode]
-    shapiro_test <- shapiro.test(data_job_mode)
-    
-    cat(paste(job, "job with", mode, "execution:\n"))
-    cat(paste(job, "job with", mode, "execution:\n"), file = filePath, append = TRUE)
-    
-    print(shapiro_test)
-    cat(capture.output(shapiro_test), file = filePath, append = TRUE)
-    
-    # TODO: Save that in the data frame
-    if (shapiro_test$p.value < 0.05){
-      cat(">>> No normal distribution\n\n")
-      cat(">>> No normal distribution\n\n", file = filePath, append = TRUE)
-    }
-    else {
-      cat(">>> Normal distribution\n\n")
-      cat(">>> Normal distribution\n\n", file = filePath, append = TRUE)
+
+filePath = file.path(
+  dirname(rstudioapi::getSourceEditorContext()$path),
+  "out",
+  "shapiro_results.txt"
+)
+file.remove(filePath)
+for (metric in metrics) {
+  for (job in job_types) {
+    for (mode in modes) {
+      data <- df_total[[metric]][df_total$JobType == job & df_total$Mode == mode]
+      shapiro_test <- shapiro.test(data)
+
+      # Append results to the data frame
+      shapiro_results <- rbind(shapiro_results, data.frame(
+        Metric = metric,
+        JobType = job,
+        Mode = mode,
+        PValue = shapiro_test$p.value,
+        IsNormal = shapiro_test$p.value < 0.05
+      ))
+  
+      # Write to file
+      cat(sprintf("%s of %s job with %s execution:\n", metric, job, mode), file = filePath, append = TRUE)
+      cat(sprintf("Shapiro-Wilk normality test gave p-value = %.8f ", shapiro_test$p.value), file = filePath, append = TRUE)
+      cat(sprintf(
+        ">>> %s\n\n", 
+        ifelse(shapiro_results$Distribution[nrow(shapiro_results)], "Normal", "Not normal")
+      ), file = filePath, append = TRUE)
     }
   }
-  cat("______________________________________\n\n", file = filePath, append = TRUE)
 }
+
+# for (job in job_types) {
+#   for (mode in modes) {
+#     
+#     data_job_mode <- df_total$AvgCPU[df_total$JobType == job & df_total$Mode == mode]
+#     shapiro_test <- shapiro.test(data_job_mode)
+#     
+#     cat(paste(job, "job with", mode, "execution:\n"))
+#     cat(paste(job, "job with", mode, "execution:\n"), file = filePath, append = TRUE)
+#     
+#     print(shapiro_test)
+#     cat(capture.output(shapiro_test), file = filePath, append = TRUE)
+#     
+#     # TODO: Save that in the data frame
+#     if (shapiro_test$p.value < 0.05){
+#       cat(">>> No normal distribution\n\n")
+#       cat(">>> No normal distribution\n\n", file = filePath, append = TRUE)
+#     }
+#     else {
+#       cat(">>> Normal distribution\n\n")
+#       cat(">>> Normal distribution\n\n", file = filePath, append = TRUE)
+#     }
+#   }
+#   cat("______________________________________\n\n", file = filePath, append = TRUE)
+# }
