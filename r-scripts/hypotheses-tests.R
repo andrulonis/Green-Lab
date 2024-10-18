@@ -97,21 +97,29 @@ for (job in seq_along(job_types)) {
 
   # TODO: Check normality and do either t-test or Wilcoxon
   
-  printAndSafe(
-    paste(
-      "\n\n>>> Null hypothesis is",
-      exec_result && mem_result && cpu_result
-    ),
-    filePath
-  )
+  # printAndSafe(
+  #   paste(
+  #     "\n\n>>> Null hypothesis is",
+  #     exec_result && mem_result && cpu_result
+  #   ),
+  #   filePath
+  # )
 }
 
 # Hypothesis 3
 
 # TODO: Calculate all Pearson corr. coeffs., average them, compare them
 # Could be useful library: https://personality-project.org/r/psych/help/r.test.html
+dev.off()
+par(mfrow=c(6, 10), mar=c(1, 1, 1, 1))
 
-plot(as.numeric(unlist(df_total$AvgCPUPerS[1])),as.numeric(unlist(df_total$EnergyPerS[1])))
+for (i in seq(1, 60)) {
+  y <- unlist(df_total$EnergyPerS[i])
+  x <- unlist(df_total$AvgCPUPerS[i])
+  x <- x[y < 1000]
+  y <- y[y < 1000]
+  plot(x, y)
+}
 
 df_total$PearsonCoeff = NA
 
