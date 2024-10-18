@@ -68,11 +68,12 @@ for (run in 1:nrow(data)) {
     for (row_id in 1:num_rows) {
       cpu_means[row_id] = mean(data_rq3[[run, rep]][row_id, cpu_columns])
     }
-    cpu_mean_usage[[run, rep]] = as.list(cpu_means)
-    energy_usage[[run, rep]] = as.list(diff(data_rq3[[run, rep]][, "PACKAGE_ENERGY..J."]))
+    cpu_mean_usage[[run, rep]] = as.list(cpu_means[-1])
+    energy_values = diff(data_rq3[[run, rep]][, "PACKAGE_ENERGY..J."])
+    energy_values[energy_values < 0] = energy_values[energy_values < 0] + 262144
+    energy_usage[[run, rep]] = energy_values
   }
 }
-
 
 # Combine data to be stored in one dataframe
 "
@@ -94,6 +95,8 @@ df_total <- data.frame(
   AvgMem = numeric(),
   ExecTime = numeric(),
   TotalEnergy = numeric(),
+  AvgCPUPerS = I(numeric()),
+  EnergyPerS = I(numeric()),
   stringsAsFactors = FALSE
 )
 
@@ -108,7 +111,9 @@ for (job in seq_along(job_types)) {
         AvgCPU = avg_cpu[counter, run],
         AvgMem = avg_mem[counter, run],
         ExecTime = execution_time[counter, run],
-        TotalEnergy = total_energy[counter, run]
+        TotalEnergy = total_energy[counter, run],
+        AvgCPUPerS = I(cpu_mean_usage[counter, run]),
+        EnergyPerS = I(energy_usage[counter, run])
       )
       df_total <- rbind(df_total, entry)
     }
@@ -191,3 +196,4 @@ save(avg_cpu_all, file = paste(
   "/out/avg_cpu_all.RData",
   sep = ""
 ))
+
