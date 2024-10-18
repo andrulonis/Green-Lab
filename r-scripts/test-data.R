@@ -103,28 +103,3 @@ for (metric in metrics) {
     }
   }
 }
-
-# for (job in job_types) {
-#   for (mode in modes) {
-#     
-#     data_job_mode <- df_total$AvgCPU[df_total$JobType == job & df_total$Mode == mode]
-#     shapiro_test <- shapiro.test(data_job_mode)
-#     
-#     cat(paste(job, "job with", mode, "execution:\n"))
-#     cat(paste(job, "job with", mode, "execution:\n"), file = filePath, append = TRUE)
-#     
-#     print(shapiro_test)
-#     cat(capture.output(shapiro_test), file = filePath, append = TRUE)
-#     
-#     # TODO: Save that in the data frame
-#     if (shapiro_test$p.value < 0.05){
-#       cat(">>> No normal distribution\n\n")
-#       cat(">>> No normal distribution\n\n", file = filePath, append = TRUE)
-#     }
-#     else {
-#       cat(">>> Normal distribution\n\n")
-#       cat(">>> Normal distribution\n\n", file = filePath, append = TRUE)
-#     }
-#   }
-#   cat("______________________________________\n\n", file = filePath, append = TRUE)
-# }
