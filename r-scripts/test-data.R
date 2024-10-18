@@ -46,7 +46,7 @@ for (metric in metrics) {
   }
 }
 
-title("QQ-plots of ", outer = TRUE, line = 3, cex.main = 2)
+title("QQ-plots of metrics per run", outer = TRUE, line = 3, cex.main = 2)
 
 for (row in seq_along(metrics_labels)) {
   mtext(metrics_labels[length(metrics_labels) + 1 - row], side = 2, line = 1, outer = TRUE, at = 0.130  + 0.25 * (row - 1), font = 2, cex = 1)
