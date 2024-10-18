@@ -1,3 +1,4 @@
+library("car")
 # Load data from analyse-data.R
 
 load(paste(
@@ -117,7 +118,98 @@ for (row in 1:nrow(df_total)) {
   df_total$PearsonCoeff[row] = cor(as.numeric(unlist(df_total$AvgCPUPerS[row])),as.numeric(unlist(df_total$EnergyPerS[row])), method = "pearson")
 }
 
-print(as.numeric(unlist(df_total$Run))[as.numeric(unlist(df_total$EnergyPerS))>1000])
-
 plot(as.numeric(unlist(df_total$AvgCPUPerS)), as.numeric(unlist(df_total$EnergyPerS)))
     
+
+
+
+
+
+
+
+
+
+
+
+
+job_types <- c("docking-protein-DNA",
+               "docking-protein-protein",
+               "cyclise-peptide")
+modes <- c("sequential", "parallel")
+metrics <- c("PearsonCoeff")
+metrics_labels <- c("CPU utilisation (%)", "Memory usage (GiB)", "Execution time (s)", "Energy usage (kJ)")
+df_total$AvgMem = df_total$AvgMem / 2^30
+df_total$ExecTime = df_total$ExecTime / 10^3
+df_total$TotalEnergy = df_total$TotalEnergy / 10^3
+
+# QQ-plot
+png(
+  file.path(
+    dirname(rstudioapi::getSourceEditorContext()$path),
+    "out", "plots", "qqplots.png"
+  ),
+  width=1600,
+  height=1200
+)
+par(mfrow=c(4,4), oma=c(1, 3, 5, 0), mar=c(1.75, 1.75, 1.75, 1.75))
+
+
+for (metric in metrics) {
+  for (job in job_types) {
+    for (mode in modes) {
+      data <- df_total[[metric]][df_total$JobType == job & df_total$Mode == mode]
+      
+      qqPlot(
+        data,
+        ylab = "",
+        main = NULL
+      )
+    }
+  }
+}
+
+dev.off()
+
+shapiro_results <- data.frame(
+  Metric = character(),
+  JobType = character(),
+  Mode = character(),
+  PValue = numeric(),
+  IsNormal = logical()
+)
+
+filePath = file.path(
+  dirname(rstudioapi::getSourceEditorContext()$path),
+  "out",
+  "shapiro_results.txt"
+)
+file.remove(filePath)
+for (metric in metrics) {
+  for (job in job_types) {
+    for (mode in modes) {
+      data <- df_total[[metric]][df_total$JobType == job & df_total$Mode == mode]
+      shapiro_test <- shapiro.test(data)
+      
+      # Append results to the data frame
+      shapiro_results <- rbind(shapiro_results, data.frame(
+        Metric = metric,
+        JobType = job,
+        Mode = mode,
+        PValue = shapiro_test$p.value,
+        IsNormal = shapiro_test$p.value >= 0.05
+      ))
+      
+      # Write to file
+      cat(sprintf("%s of %s job with %s execution:\n", metric, job, mode), file = filePath, append = TRUE)
+      cat(sprintf("Shapiro-Wilk normality test gave p-value = %.8f ", shapiro_test$p.value), file = filePath, append = TRUE)
+      cat(sprintf( ">>> %s\n\n", ifelse(shapiro_results$IsNormal[nrow(shapiro_results)], "Normal", "Not normal")), file = filePath, append = TRUE)
+    }
+  }
+}
+
+
+# T-test
+
+for (row in seq(1, nrow(df_total), by = 20)) {
+  print(t.test(df_total$PearsonCoeff[row:(row+9)],df_total$PearsonCoeff[(row+10):(row+19)],)$p.value)
+}
