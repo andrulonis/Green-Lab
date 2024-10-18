@@ -12,72 +12,55 @@ job_types <- c("docking-protein-DNA",
                "docking-protein-protein",
                "cyclise-peptide")
 modes <- c("sequential", "parallel")
-
+metrics <- c("AvgCPU", "AvgMem", "ExecTime", "TotalEnergy")
 
 # QQ-plot
 
+png(
+    paste(
+      dirname(rstudioapi::getSourceEditorContext()$path),
+      "/out/plots/qqplots.png",
+      sep = ""
+    ),
+    width=1600,
+    height=1200
+)
 par(mfrow=c(4,6))
-for (metric in c("AvgCPU", "AvgMem", "ExecTime", "TotalEnergy")) {
-  for (job in job_types) {
-    data_mode1 <- df_total[[metric]][df_total$JobType == job & df_total$Mode == modes[1]]
-    data_mode2 <- df_total[[metric]][df_total$JobType == job & df_total$Mode == modes[2]]
-    
-    # mtext("My Multiplot Title",                   # Add main title
-         # side = 3,
-          #line = - 2,
-          #outer = TRUE)
 
-    qqPlot(
-      data_mode1,
-      main = paste("QQ-Plot of", metric, "\nfor", job, "\n", modes[1]),
-      ylab = colnames(df_total)[result]
-    )
-    
-    qqPlot(
-      data_mode2,
-      main = paste("QQ-Plot of", metric, "\nfor", job, "\n", modes[2]),
-      ylab = colnames(df_total)[result]
-    )
-    
-    # TODO: Check how to plot all diagrams on one page and save it
-    # png(
-    #   paste(
-    #     dirname(rstudioapi::getSourceEditorContext()$path),
-    #     "/out/plots/qq-plot-",
-    #     colnames(df_total)[result],
-    #     "-",
-    #     job_types[job],
-    #     ".png",
-    #     sep = ""
-    #   ),
-    #   width = 1200,
-    #   height = 800
-    # )
+for (metric in metrics) {
+  for (job in job_types) {
+    for (mode in modes) {
+      data <- df_total[[metric]][df_total$JobType == job & df_total$Mode == mode]
+      qqPlot(
+        data,
+        main = paste("QQ-Plot of", metric, "\nfor", job, "\n", mode),
+        ylab = colnames(df_total)[result]
+      )
+    }
   }
 }
 
-par(mfrow = c(1, 1))
+dev.off()
 
 # Shapiro-Wilk
-counter <- 1
 filePath = paste(
   dirname(rstudioapi::getSourceEditorContext()$path),
   "/out/shapiro_results.txt",
   sep = ""
 )
-for (job in seq_along(job_types)) {
-  for (mode in seq_along(modes)) {
-    data_job_mode <- df_total$AvgCPU[df_total$JobType == job_types[job] &
-                                       df_total$Mode == modes[mode]]
+for (job in job_types) {
+  for (mode in modes) {
+    
+    data_job_mode <- df_total$AvgCPU[df_total$JobType == job & df_total$Mode == mode]
     shapiro_test <- shapiro.test(data_job_mode)
     
-    cat(paste(job_types[job], "job with", modes[mode], "execution:\n"))
-    cat(paste(job_types[job], "job with", modes[mode], "execution:\n"), file = filePath, append = TRUE)
+    cat(paste(job, "job with", mode, "execution:\n"))
+    cat(paste(job, "job with", mode, "execution:\n"), file = filePath, append = TRUE)
     
     print(shapiro_test)
     cat(capture.output(shapiro_test), file = filePath, append = TRUE)
     
-    # TODO: Save that in the dataframe
+    # TODO: Save that in the data frame
     if (shapiro_test$p.value < 0.05){
       cat(">>> No normal distribution\n\n")
       cat(">>> No normal distribution\n\n", file = filePath, append = TRUE)
@@ -86,7 +69,6 @@ for (job in seq_along(job_types)) {
       cat(">>> Normal distribution\n\n")
       cat(">>> Normal distribution\n\n", file = filePath, append = TRUE)
     }
-    counter <- counter + 1
   }
   cat("______________________________________\n\n", file = filePath, append = TRUE)
 }
