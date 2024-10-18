@@ -1,0 +1,72 @@
+AvgCPU of docking-protein-DNA job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.92827981 >>> Normal
+
+AvgCPU of docking-protein-DNA job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.12999967 >>> Normal
+
+AvgCPU of docking-protein-protein job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.00003812 >>> Not normal
+
+AvgCPU of docking-protein-protein job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.00180152 >>> Not normal
+
+AvgCPU of cyclise-peptide job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.00016420 >>> Not normal
+
+AvgCPU of cyclise-peptide job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.20336438 >>> Normal
+
+AvgMem of docking-protein-DNA job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.00045117 >>> Not normal
+
+AvgMem of docking-protein-DNA job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.00383527 >>> Not normal
+
+AvgMem of docking-protein-protein job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.00596028 >>> Not normal
+
+AvgMem of docking-protein-protein job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.00015891 >>> Not normal
+
+AvgMem of cyclise-peptide job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.00022732 >>> Not normal
+
+AvgMem of cyclise-peptide job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.00650875 >>> Not normal
+
+ExecTime of docking-protein-DNA job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.10310707 >>> Normal
+
+ExecTime of docking-protein-DNA job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.00026599 >>> Not normal
+
+ExecTime of docking-protein-protein job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.00054748 >>> Not normal
+
+ExecTime of docking-protein-protein job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.00001883 >>> Not normal
+
+ExecTime of cyclise-peptide job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.23211838 >>> Normal
+
+ExecTime of cyclise-peptide job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.00016634 >>> Not normal
+
+TotalEnergy of docking-protein-DNA job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.00006067 >>> Not normal
+
+TotalEnergy of docking-protein-DNA job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.00061900 >>> Not normal
+
+TotalEnergy of docking-protein-protein job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.00066055 >>> Not normal
+
+TotalEnergy of docking-protein-protein job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.00011944 >>> Not normal
+
+TotalEnergy of cyclise-peptide job with sequential execution:
+Shapiro-Wilk normality test gave p-value = 0.00004145 >>> Not normal
+
+TotalEnergy of cyclise-peptide job with parallel execution:
+Shapiro-Wilk normality test gave p-value = 0.11627681 >>> Normal
+
