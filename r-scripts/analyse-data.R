@@ -71,7 +71,8 @@ for (run in 1:nrow(data)) {
     cpu_mean_usage[[run, rep]] = as.list(cpu_means[-1])
     energy_values = diff(data_rq3[[run, rep]][, "PACKAGE_ENERGY..J."])
     energy_values[energy_values < 0] = energy_values[energy_values < 0] + 262144
-    energy_usage[[run, rep]] = energy_values
+    energy_values[energy_values > 100] = mean(energy_values[energy_values >= 0 & energy_values <= 100])
+    energy_usage[[run, rep]] = as.list(energy_values)
   }
 }
 

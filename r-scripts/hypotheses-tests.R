@@ -111,11 +111,13 @@ for (job in seq_along(job_types)) {
 # TODO: Calculate all Pearson corr. coeffs., average them, compare them
 # Could be useful library: https://personality-project.org/r/psych/help/r.test.html
 
-plot(as.numeric(unlist(df_total$AvgCPUPerS[1])),as.numeric(unlist(df_total$EnergyPerS[1])))
-
 df_total$PearsonCoeff = NA
 
-for (row in df_total) {
-  cor()
+for (row in 1:nrow(df_total)) {
+  df_total$PearsonCoeff[row] = cor(as.numeric(unlist(df_total$AvgCPUPerS[row])),as.numeric(unlist(df_total$EnergyPerS[row])), method = "pearson")
 }
-       
+
+print(as.numeric(unlist(df_total$Run))[as.numeric(unlist(df_total$EnergyPerS))>1000])
+
+plot(as.numeric(unlist(df_total$AvgCPUPerS)), as.numeric(unlist(df_total$EnergyPerS)))
+    
