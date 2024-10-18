@@ -1,3 +1,5 @@
+library("car")
+
 # Load data from analyse-data.R
 
 load(paste(
@@ -14,23 +16,27 @@ modes <- c("sequential", "parallel")
 
 # QQ-plot
 
-par(mfrow = c(4, 3))
-all_qqplots <- list()
-counter <- 1
-for (result in 4:7) {
-  for (job in seq_along(job_types)) {
-    data_mode1 <- df_total[[colnames(df_total)[result]]][df_total$JobType == job_types[job] &
-                                                           df_total$Mode == modes[1]]
+par(mfrow=c(4,6))
+for (metric in c("AvgCPU", "AvgMem", "ExecTime", "TotalEnergy")) {
+  for (job in job_types) {
+    data_mode1 <- df_total[[metric]][df_total$JobType == job & df_total$Mode == modes[1]]
+    data_mode2 <- df_total[[metric]][df_total$JobType == job & df_total$Mode == modes[2]]
     
-    data_mode2 <- df_total[[colnames(df_total)[result]]][df_total$JobType == job_types[job] &
-                                                           df_total$Mode == modes[2]]
-    
-    qqplot(
+    # mtext("My Multiplot Title",                   # Add main title
+         # side = 3,
+          #line = - 2,
+          #outer = TRUE)
+
+    qqPlot(
       data_mode1,
+      main = paste("QQ-Plot of", metric, "\nfor", job, "\n", modes[1]),
+      ylab = colnames(df_total)[result]
+    )
+    
+    qqPlot(
       data_mode2,
-      main = paste("QQ-Plot of", colnames(df_total)[result], "\nfor", job_types[job]),
-      xlab = "Sequential",
-      ylab = "Parallel"
+      main = paste("QQ-Plot of", metric, "\nfor", job, "\n", modes[2]),
+      ylab = colnames(df_total)[result]
     )
     
     # TODO: Check how to plot all diagrams on one page and save it
@@ -47,13 +53,6 @@ for (result in 4:7) {
     #   width = 1200,
     #   height = 800
     # )
-    
-    
-    
-    all_qqplots <- append(all_qqplots, qq_plot)
-    # 
-    # dev.off()
-    counter <- counter + 1
   }
 }
 
