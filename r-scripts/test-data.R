@@ -90,7 +90,7 @@ for (metric in metrics) {
         JobType = job,
         Mode = mode,
         PValue = shapiro_test$p.value,
-        IsNormal = shapiro_test$p.value < 0.05
+        IsNormal = shapiro_test$p.value >= 0.05
       ))
   
       # Write to file
