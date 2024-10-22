@@ -45,7 +45,7 @@ for (list in seq_along(avg_power_all)) {
     main = names(avg_power_all)[list]
   )
   box()
-  mtext("power usage (W)",side=2,col="black",line=2.5) 
+  mtext("Power usage (W)",side=2,col="black",line=2.5) 
   axis(2, ylim=c(0,80), col="blue",col.axis="blue",las=1)
   
   par(new=TRUE)
@@ -87,6 +87,10 @@ for (result in 4:7) {
     geom_boxplot(alpha = 0.5, fill = "white") +
     geom_jitter(size = 0.25, colour = "red") +
     facet_wrap(~ JobType + Mode, scales = "free") +
+    stat_summary(fun = mean, geom = "hline",
+                 aes(yintercept = ..y..), 
+                 linetype = "dashed",
+                 color = "blue", size = 0.5) +
     scale_y_continuous(
       labels = function(x) {
         format(x, digits = 4, scientific = FALSE)
