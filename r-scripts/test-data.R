@@ -64,7 +64,7 @@ dev.off()
 
 # Shapiro-Wilk
 
-shapiro_results <- data.frame(
+shapiro_results_rq12 <- data.frame(
   Metric = character(),
   JobType = character(),
   Mode = character(),
@@ -85,7 +85,7 @@ for (metric in metrics) {
       shapiro_test <- shapiro.test(data)
 
       # Append results to the data frame
-      shapiro_results <- rbind(shapiro_results, data.frame(
+      shapiro_results_rq12 <- rbind(shapiro_results_rq12, data.frame(
         Metric = metric,
         JobType = job,
         Mode = mode,
@@ -96,7 +96,7 @@ for (metric in metrics) {
       # Write to file
       cat(sprintf("%s of %s job with %s execution:\n", metric, job, mode), file = filePath, append = TRUE)
       cat(sprintf("Shapiro-Wilk normality test gave p-value = %.8f ", shapiro_test$p.value), file = filePath, append = TRUE)
-      cat(sprintf( ">>> %s\n\n", ifelse(shapiro_results$IsNormal[nrow(shapiro_results)], "Normal", "Not normal")), file = filePath, append = TRUE)
+      cat(sprintf( ">>> %s\n\n", ifelse(shapiro_results_rq12$IsNormal[nrow(shapiro_results_rq12)], "Normal", "Not normal")), file = filePath, append = TRUE)
     }
   }
 }

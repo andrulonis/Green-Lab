@@ -130,22 +130,22 @@ job_types <- c("docking-protein-DNA",
                "docking-protein-protein",
                "cyclise-peptide")
 modes <- c("sequential", "parallel")
-metrics <- c("PearsonCoeff")
-metrics_labels <- c("CPU utilisation (%)", "Memory usage (GiB)", "Execution time (s)", "Energy usage (kJ)")
+metrics <- c("AvgCPU", "AvgMem", "ExecTime", "TotalEnergy", "PearsonCoeff")
+metrics_labels <- c("CPU utilisation (%)", "Memory usage (GiB)", "Execution time (s)", "Energy usage (kJ)", "Pearson Coefficient")
 df_total$AvgMem = df_total$AvgMem / 2^30
 df_total$ExecTime = df_total$ExecTime / 10^3
 df_total$TotalEnergy = df_total$TotalEnergy / 10^3
 
-# QQ-plot
+# QQ-plot RQ3
 png(
   file.path(
     dirname(rstudioapi::getSourceEditorContext()$path),
-    "out", "plots", "qqplots.png"
+    "out", "plots", "qqplots_rq3.png"
   ),
   width=1600,
   height=1200
 )
-par(mfrow=c(4,4), oma=c(1, 3, 5, 0), mar=c(1.75, 1.75, 1.75, 1.75))
+par(mfrow=c(2,3), oma=c(1, 3, 5, 0), mar=c(1.75, 1.75, 1.75, 1.75))
 
 
 for (metric in metrics) {
@@ -175,7 +175,7 @@ shapiro_results <- data.frame(
 filePath = file.path(
   dirname(rstudioapi::getSourceEditorContext()$path),
   "out",
-  "shapiro_results_rq3.txt"
+  "shapiro_results.txt"
 )
 file.remove(filePath)
 for (metric in metrics) {
@@ -201,9 +201,13 @@ for (metric in metrics) {
   }
 }
 
-
-# T-test
-
+# Wilcox test for RQ1 and RQ2, t-test for RQ3
+counter = 1
 for (row in seq(1, nrow(df_total), by = 20)) {
-  print(t.test(df_total$PearsonCoeff[row:(row+9)],df_total$PearsonCoeff[(row+10):(row+19)],)$p.value)
+  print(sprintf("AvgCPU p-value for example %s: %f",counter,wilcox.test(df_total$AvgCPU[row:(row+9)],df_total$AvgCPU[(row+10):(row+19)],)$p.value))
+  print(sprintf("AvgMem p-value for example %s: %f",counter,wilcox.test(df_total$AvgMem[row:(row+9)],df_total$AvgMem[(row+10):(row+19)],)$p.value)) 
+  print(sprintf("ExecTime p-value for example %s: %f",counter,wilcox.test(df_total$ExecTime[row:(row+9)],df_total$ExecTime[(row+10):(row+19)],)$p.value))
+  print(sprintf("TotalEnergy p-value for example %s: %f",counter,wilcox.test(df_total$TotalEnergy[row:(row+9)],df_total$TotalEnergy[(row+10):(row+19)],)$p.value))
+  print(sprintf("PearsonCoeff p-value for example %s: %f",counter,t.test(df_total$PearsonCoeff[row:(row+9)],df_total$PearsonCoeff[(row+10):(row+19)],)$p.value))
+  counter = counter + 1
 }
