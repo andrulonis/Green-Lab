@@ -25,7 +25,11 @@ for (i in seq(1, 60)) {
 df_total$PearsonCoeff = NA
 
 for (row in 1:nrow(df_total)) {
-  df_total$PearsonCoeff[row] = cor(as.numeric(unlist(df_total$AvgCPUPerS[row])),as.numeric(unlist(df_total$EnergyPerS[row])), method = "pearson")
+  y <- unlist(df_total$EnergyPerS[row])
+  x <- unlist(df_total$AvgCPUPerS[row])
+  x <- x[y < 1000]
+  y <- y[y < 1000]
+  df_total$PearsonCoeff[row] = cor(as.numeric(x), as.numeric(y), method = "pearson")
 }
 
 job_types <- c("docking-protein-DNA",
