@@ -7,6 +7,8 @@ setwd(paste(
 ))
 options(digits = 22)
 
+# Load data from csv files
+
 data = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
 data_rq3 = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
 
@@ -36,6 +38,8 @@ for (seq_run in seq(from = 1, to = 5, by = 2)) {
   }
 }
 
+# Calculate necessary values for RQ1 and RQ2
+
 total_energy = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
 execution_time = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
 avg_mem = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
@@ -52,31 +56,7 @@ for (run in 1:nrow(data)) {
   }
 }
 
-cpu_mean_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
-energy_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
-
-for (run in 1:nrow(data)) {
-  for (rep in 1:ncol(data)) {
-    num_rows = nrow(data_rq3[[run, rep]])
-    
-    if (is.null(num_rows)) {
-      next
-    }
-    
-    cpu_means = numeric(num_rows)
-    
-    for (row_id in 1:num_rows) {
-      cpu_means[row_id] = mean(data_rq3[[run, rep]][row_id, cpu_columns])
-    }
-    cpu_mean_usage[[run, rep]] = as.list(cpu_means[-1])
-    energy_values = diff(data_rq3[[run, rep]][, "PACKAGE_ENERGY..J."])
-    energy_values[energy_values < 0] = energy_values[energy_values < 0] + 262144
-    energy_values[energy_values > 100] = mean(energy_values[energy_values >= 0 & energy_values <= 100])
-    energy_usage[[run, rep]] = as.list(energy_values)
-  }
-}
-
-# Combine data to be stored in one dataframe
+# Combine data to be stored in one dataframe and save it
 "
 Run:  |    0    |   1   |   2   |   3   |   4   |   5   |
 Job:  |   dpd   |  dpd  |  dpp  |  dpp  |  pc   |  pc   |
@@ -128,7 +108,47 @@ save(df_total, file = paste(
   sep = ""
 ))
 
-# Calculate the means of CPU usage and power consumption over all repetitions
+# Calculate necessary values for RQ3 and save them
+
+cpu_mean_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
+energy_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
+
+for (run in 1:nrow(data)) {
+  for (rep in 1:ncol(data)) {
+    num_rows = nrow(data_rq3[[run, rep]])
+    
+    if (is.null(num_rows)) {
+      next
+    }
+    
+    cpu_means = numeric(num_rows)
+    
+    for (row_id in 1:num_rows) {
+      cpu_means[row_id] = mean(data_rq3[[run, rep]][row_id, cpu_columns])
+    }
+    cpu_mean_usage[[run, rep]] = as.list(cpu_means[-1])
+    energy_values = diff(data_rq3[[run, rep]][, "PACKAGE_ENERGY..J."])
+    energy_values[energy_values < 0] = energy_values[energy_values < 0] + 262144
+    energy_values[energy_values > 100] = mean(energy_values[energy_values >= 0 &
+                                                              energy_values <= 100])
+    energy_usage[[run, rep]] = as.list(energy_values)
+  }
+}
+
+save(df_total,
+     file = paste(
+       dirname(rstudioapi::getSourceEditorContext()$path),
+       "/out/cpu_mean_usage.RData",
+       sep = ""
+     ))
+
+save(df_total, file = paste(
+  dirname(rstudioapi::getSourceEditorContext()$path),
+  "/out/energy_usage.RData",
+  sep = ""
+))
+
+# Calculate the means of CPU usage and power consumption over all repetitions and save them
 
 avg_cpu_all <- list()
 
@@ -174,15 +194,16 @@ for (job in seq_along(job_types)) {
   }
 }
 
-save(avg_cpu_all, file = paste(
-  dirname(rstudioapi::getSourceEditorContext()$path),
-  "/out/avg_cpu_all.RData",
-  sep = ""
-))
+save(avg_cpu_all,
+     file = paste(
+       dirname(rstudioapi::getSourceEditorContext()$path),
+       "/out/avg_cpu_all.RData",
+       sep = ""
+     ))
 
-save(avg_power_all, file = paste(
-  dirname(rstudioapi::getSourceEditorContext()$path),
-  "/out/avg_power_all.RData",
-  sep = ""
-))
-
+save(avg_power_all,
+     file = paste(
+       dirname(rstudioapi::getSourceEditorContext()$path),
+       "/out/avg_power_all.RData",
+       sep = ""
+     ))
