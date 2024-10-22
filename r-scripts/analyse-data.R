@@ -128,7 +128,7 @@ save(df_total, file = paste(
   sep = ""
 ))
 
-# Calculate the means of CPU usage over repetition
+# Calculate the means of CPU usage and power consumption over all repetitions
 
 avg_cpu_all <- list()
 
@@ -152,8 +152,6 @@ for (job in seq_along(job_types)) {
   }
 }
 
-# Calculate means over all repetitions and plot power and CPU usage
-
 avg_power_all <- list()
 
 counter = 1
@@ -175,53 +173,6 @@ for (job in seq_along(job_types)) {
     
   }
 }
-
-png(
-  file.path(
-    dirname(rstudioapi::getSourceEditorContext()$path),
-    "out", "plots", "all-avg-plots.png"
-  ),
-  width=800,
-  height=600
-)
-
-par(mfrow = c(2, 3))
-par(mar=c(5, 4, 4, 6) + 0.1)
-for (list in seq_along(avg_power_all)) {
-  par(new=FALSE)
-  
-  plot(
-    avg_power_all[[list]],
-    type = "l",
-    col = "blue",
-    lwd = 1,
-    xlab = "",
-    ylab = "",
-    axes=FALSE,
-    main = names(avg_power_all)[list]
-  )
-  box()
-  mtext("power usage (W)",side=2,col="black",line=2.5) 
-  axis(2, ylim=c(0,80), col="blue",col.axis="blue",las=1)
-  
-  par(new=TRUE)
-  plot(
-    avg_cpu_all[[list]],
-    type = "l",
-    col = "orange",
-    lwd = 1,
-    axes=FALSE,
-    xlab="",
-    ylab=""
-  )
-  axis(4, col="orange",col.axis="orange",las=1)
-  mtext("CPU usage (%)",side=4,col="black",line=2.5) 
-  
-  axis(1)
-  mtext("Time (seconds)",side=1,col="black",line=2.5) 
-}
-
-dev.off()
 
 save(avg_cpu_all, file = paste(
   dirname(rstudioapi::getSourceEditorContext()$path),
