@@ -152,10 +152,9 @@ for (job in seq_along(job_types)) {
   }
 }
 
-# TODO: Calculate the means of power usage over repetition
-# I don't know why, but this doesn't work yet
+# Calculate means over all repetitions and plot power and CPU usage
 
-energy_usage_all <- list()
+avg_power_all <- list()
 
 counter = 1
 for (job in seq_along(job_types)) {
@@ -170,31 +169,69 @@ for (job in seq_along(job_types)) {
       formated <- cbind(formated, as.numeric(energy_usage[[counter, i]])[1:min_length])
     }
     
-    energy_usage_all[[paste(job_types[job], modes[mode], sep = "_")]] <- rowMeans(formated)
+    avg_power_all[[paste(job_types[job], modes[mode], sep = "_")]] <- rowMeans(formated)
     
     counter = counter + 1
     
   }
 }
 
+png(
+  file.path(
+    dirname(rstudioapi::getSourceEditorContext()$path),
+    "out", "plots", "all-avg-plots.png"
+  ),
+  width=800,
+  height=600
+)
 
-# TODO: Plotting overall means
 par(mfrow = c(2, 3))
-for (list in seq_along(energy_usage_all)) {
+par(mar=c(5, 4, 4, 6) + 0.1)
+for (list in seq_along(avg_power_all)) {
+  par(new=FALSE)
+  
   plot(
-    energy_usage_all[[list]],
+    avg_power_all[[list]],
     type = "l",
     col = "blue",
     lwd = 1,
-    xlab = "Time",
-    ylab = "Power Usage",
-    main = names(energy_usage_all)[list]
+    xlab = "",
+    ylab = "",
+    axes=FALSE,
+    main = names(avg_power_all)[list]
   )
+  box()
+  mtext("power usage (W)",side=2,col="black",line=2.5) 
+  axis(2, ylim=c(0,80), col="blue",col.axis="blue",las=1)
+  
+  par(new=TRUE)
+  plot(
+    avg_cpu_all[[list]],
+    type = "l",
+    col = "orange",
+    lwd = 1,
+    axes=FALSE,
+    xlab="",
+    ylab=""
+  )
+  axis(4, col="orange",col.axis="orange",las=1)
+  mtext("CPU usage (%)",side=4,col="black",line=2.5) 
+  
+  axis(1)
+  mtext("Time (seconds)",side=1,col="black",line=2.5) 
 }
+
+dev.off()
 
 save(avg_cpu_all, file = paste(
   dirname(rstudioapi::getSourceEditorContext()$path),
   "/out/avg_cpu_all.RData",
+  sep = ""
+))
+
+save(avg_power_all, file = paste(
+  dirname(rstudioapi::getSourceEditorContext()$path),
+  "/out/avg_power_all.RData",
   sep = ""
 ))
 
