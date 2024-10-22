@@ -75,7 +75,7 @@ shapiro_results <- data.frame(
 filePath = file.path(
   dirname(rstudioapi::getSourceEditorContext()$path),
   "out",
-  "shapiro_results.txt"
+  "shapiro_results_rq12.txt"
 )
 file.remove(filePath)
 for (metric in metrics) {

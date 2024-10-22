@@ -81,6 +81,30 @@ df_total <- data.frame(
   stringsAsFactors = FALSE
 )
 
+cpu_mean_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
+energy_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
+
+for (run in 1:nrow(data)) {
+  for (rep in 1:ncol(data)) {
+    num_rows = nrow(data_rq3[[run, rep]])
+    
+    if (is.null(num_rows)) {
+      next
+    }
+    
+    cpu_means = numeric(num_rows)
+    
+    for (row_id in 1:num_rows) {
+      cpu_means[row_id] = mean(data_rq3[[run, rep]][row_id, cpu_columns])
+    }
+    cpu_mean_usage[[run, rep]] = as.list(cpu_means[-1])
+    energy_values = diff(data_rq3[[run, rep]][, "PACKAGE_ENERGY..J."])
+    energy_values[energy_values < 0] = energy_values[energy_values < 0] + 262144
+    energy_values[energy_values > 100] = mean(energy_values[energy_values >= 0 & energy_values <= 100])
+    energy_usage[[run, rep]] = as.list(energy_values)
+  }
+}
+
 counter <- 1
 for (job in seq_along(job_types)) {
   for (mode in seq_along(modes)) {
@@ -107,33 +131,6 @@ save(df_total, file = paste(
   "/out/df_total.RData",
   sep = ""
 ))
-
-# Calculate necessary values for RQ3 and save them
-
-cpu_mean_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
-energy_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
-
-for (run in 1:nrow(data)) {
-  for (rep in 1:ncol(data)) {
-    num_rows = nrow(data_rq3[[run, rep]])
-    
-    if (is.null(num_rows)) {
-      next
-    }
-    
-    cpu_means = numeric(num_rows)
-    
-    for (row_id in 1:num_rows) {
-      cpu_means[row_id] = mean(data_rq3[[run, rep]][row_id, cpu_columns])
-    }
-    cpu_mean_usage[[run, rep]] = as.list(cpu_means[-1])
-    energy_values = diff(data_rq3[[run, rep]][, "PACKAGE_ENERGY..J."])
-    energy_values[energy_values < 0] = energy_values[energy_values < 0] + 262144
-    energy_values[energy_values > 100] = mean(energy_values[energy_values >= 0 &
-                                                              energy_values <= 100])
-    energy_usage[[run, rep]] = as.list(energy_values)
-  }
-}
 
 save(df_total,
      file = paste(

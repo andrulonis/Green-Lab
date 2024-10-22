@@ -109,9 +109,7 @@ for (job in seq_along(job_types)) {
 
 # Hypothesis 3
 
-# TODO: Calculate all Pearson corr. coeffs., average them, compare them
 # Could be useful library: https://personality-project.org/r/psych/help/r.test.html
-dev.off()
 par(mfrow=c(6, 10), mar=c(1, 1, 1, 1))
 
 for (i in seq(1, 60)) {
@@ -177,7 +175,7 @@ shapiro_results <- data.frame(
 filePath = file.path(
   dirname(rstudioapi::getSourceEditorContext()$path),
   "out",
-  "shapiro_results.txt"
+  "shapiro_results_rq3.txt"
 )
 file.remove(filePath)
 for (metric in metrics) {
