@@ -43,8 +43,7 @@ for (job in seq_along(job_types)) {
   printAndSafe(paste("\n\nAverage energy usage for", job_types[job]), filePath)
   printAndSafe(paste("\nSequential:", mean(energy_seq), "J"), filePath)
   printAndSafe(paste("\nParallel:", mean(energy_para), "J"), filePath)
-  
-  # TODO: Check for normality and do either t-test or 
+
   t_test <- t.test(energy_seq,
                    energy_para,
                    paired = TRUE,)
@@ -82,32 +81,19 @@ for (job in seq_along(job_types)) {
   printAndSafe(paste("\n\nAverage execution time for", job_types[job]), filePath)
   printAndSafe(paste("\nSequential:", msToMins(mean(exec_time_seq)), "minutes"), filePath)
   printAndSafe(paste("\nParallel:", msToMins(mean(exec_time_para)), "minutes"), filePath)
-
-  # TODO: Check normality and do either t-test or Wilcoxon
   
   printAndSafe(paste("\n\nAverage memory usage for", job_types[job]), filePath)
   printAndSafe(paste("\nSequential:", bToGb(mean(MEM_seq)), "GB"), filePath)
   printAndSafe(paste("\nParallel:", bToGb(mean(MEM_para)), "GB"), filePath)
   
-  # TODO: Check normality and do either t-test or Wilcoxon
-
-  
   printAndSafe(paste("\n\nAverage CPU usage for", job_types[job]), filePath)
   printAndSafe(paste("\nSequential:", mean(CPU_seq), "%"), filePath)
   printAndSafe(paste("\nParallel:", mean(CPU_seq), "%"), filePath)
-
-  # TODO: Check normality and do either t-test or Wilcoxon
-  
-  # printAndSafe(
-  #   paste(
-  #     "\n\n>>> Null hypothesis is",
-  #     exec_result && mem_result && cpu_result
-  #   ),
-  #   filePath
-  # )
 }
 
-# Hypothesis 3
+# Hypothesis 3 TODO: idk what you wanted here, not sure if the prints above are useful as well?
+# probably also you may want to remove any tests that are above this line since all tests are in a neat
+# form at the bottom of this file
 
 # Could be useful library: https://personality-project.org/r/psych/help/r.test.html
 par(mfrow=c(6, 10), mar=c(1, 1, 1, 1))
@@ -135,6 +121,8 @@ metrics_labels <- c("CPU utilisation (%)", "Memory usage (GiB)", "Execution time
 df_total$AvgMem = df_total$AvgMem / 2^30
 df_total$ExecTime = df_total$ExecTime / 10^3
 df_total$TotalEnergy = df_total$TotalEnergy / 10^3
+
+# QQ-plot for all metrics
 
 png(
   file.path(
@@ -177,6 +165,8 @@ for (mode in seq(1, 6, 2)) {
 
 
 dev.off()
+
+# Shapiro test for all metrics
 
 shapiro_results <- data.frame(
   Metric = character(),
