@@ -69,20 +69,32 @@ dev.off()
 
 
 # Boxplot, jitter, and violin plot
+
+formatData <- function(x, type) {
+  if(type == 5)
+    return(x / 2^30)
+  if(type == 6)
+    return(x / (60 * 10^3))
+  if(type == 7)
+    return(x / 10^3)
+  return(x)
+}
+
+metrics_labels <- c("CPU utilisation (%)", "Memory usage (GiB)", "Execution time (min)", "Energy usage (kJ)")
 for (result in 4:7) {
-  plot_total <- ggplot(df_total, aes(x = interaction(JobType, Mode), y = .data[[colnames(df_total)[result]]])) +
+  plot_total <- ggplot(df_total, aes(x = interaction(JobType, Mode), y = formatData(.data[[colnames(df_total)[result]]], result))) +
     geom_violin(trim = FALSE) +
     geom_boxplot(alpha = 0.5, fill = "white") +
     geom_jitter(size = 0.25, colour = "red") +
     facet_wrap(~ JobType + Mode, scales = "free") +
     scale_y_continuous(
-      labels = function(x)
-        format(x, digits = 4, scientific = TRUE)
+      labels = function(x) {
+        format(x, digits = 4, scientific = FALSE)
+      }
     ) +
     labs(
-      title = paste(colnames(df_total)[result], "per Job and Mode"),
       x = "JobType and Mode",
-      y = colnames(df_total)[result]
+      y = metrics_labels[result-3]
     ) +
     theme(axis.text.x = element_blank())
   print(plot_total)
