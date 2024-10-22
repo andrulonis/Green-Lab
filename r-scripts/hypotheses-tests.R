@@ -7,95 +7,11 @@ load(paste(
   sep = ""
 ))
 
-job_types <- c("docking-protein-DNA",
-               "docking-protein-protein",
-               "cyclise-peptide")
-modes <- c("sequential", "parallel")
-
 printAndSafe <- function(x, filePath) {
   cat(x)
   cat(x, file = filePath, append = TRUE)
 }
 
-msToMins <- function(ms) {
-  return(ms / 60000)
-}
-
-bToGb <- function(bytes) {
-  return(bytes / 1073741824)
-}
-
-# Hypothesis 1
-
-filePath = paste(
-  dirname(rstudioapi::getSourceEditorContext()$path),
-  "/out/hypo_1_results.txt",
-  sep = ""
-)
-
-printAndSafe("Hypothesis 1", filePath)
-for (job in seq_along(job_types)) {
-  energy_seq <- df_total$TotalEnergy[df_total$JobType == job_types[job] &
-                                       df_total$Mode == modes[1]]
-  energy_para <- df_total$TotalEnergy[df_total$JobType == job_types[job] &
-                                        df_total$Mode == modes[2]]
-  
-  printAndSafe(paste("\n\nAverage energy usage for", job_types[job]), filePath)
-  printAndSafe(paste("\nSequential:", mean(energy_seq), "J"), filePath)
-  printAndSafe(paste("\nParallel:", mean(energy_para), "J"), filePath)
-
-  t_test <- t.test(energy_seq,
-                   energy_para,
-                   paired = TRUE,)
-  
-  printAndSafe(capture.output(t_test), filePath)
-}
-
-
-# Hypothesis 2
-
-filePath = paste(
-  dirname(rstudioapi::getSourceEditorContext()$path),
-  "/out/hypo_2_results.txt",
-  sep = ""
-)
-
-printAndSafe("Hypothesis 2\n", filePath)
-for (job in seq_along(job_types)) {
-  exec_time_seq <- df_total$ExecTime[df_total$JobType == job_types[job] &
-                                           df_total$Mode == modes[1]]
-  exec_time_para <- df_total$ExecTime[df_total$JobType == job_types[job] &
-                                            df_total$Mode == modes[2]]
-  
-  MEM_seq <- df_total$AvgMem[df_total$JobType == job_types[job] &
-                                        df_total$Mode == modes[1]]
-  MEM_para <- df_total$AvgMem[df_total$JobType == job_types[job] &
-                                         df_total$Mode == modes[2]]
-  
-  CPU_seq <- df_total$AvgCPU[df_total$JobType == job_types[job] &
-                                        df_total$Mode == modes[1]]
-  CPU_para <- df_total$AvgCPU[df_total$JobType == job_types[job] &
-                                         df_total$Mode == modes[2]]
-  
-  
-  printAndSafe(paste("\n\nAverage execution time for", job_types[job]), filePath)
-  printAndSafe(paste("\nSequential:", msToMins(mean(exec_time_seq)), "minutes"), filePath)
-  printAndSafe(paste("\nParallel:", msToMins(mean(exec_time_para)), "minutes"), filePath)
-  
-  printAndSafe(paste("\n\nAverage memory usage for", job_types[job]), filePath)
-  printAndSafe(paste("\nSequential:", bToGb(mean(MEM_seq)), "GB"), filePath)
-  printAndSafe(paste("\nParallel:", bToGb(mean(MEM_para)), "GB"), filePath)
-  
-  printAndSafe(paste("\n\nAverage CPU usage for", job_types[job]), filePath)
-  printAndSafe(paste("\nSequential:", mean(CPU_seq), "%"), filePath)
-  printAndSafe(paste("\nParallel:", mean(CPU_seq), "%"), filePath)
-}
-
-# Hypothesis 3 TODO: idk what you wanted here, not sure if the prints above are useful as well?
-# probably also you may want to remove any tests that are above this line since all tests are in a neat
-# form at the bottom of this file
-
-# Could be useful library: https://personality-project.org/r/psych/help/r.test.html
 par(mfrow=c(6, 10), mar=c(1, 1, 1, 1))
 
 for (i in seq(1, 60)) {
