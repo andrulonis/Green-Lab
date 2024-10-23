@@ -7,7 +7,7 @@ the execution of jobs in High Performance Computing (HPC) domain. In particular,
 
 The architecture of the framework is illustrated in the below diagram:
 
-![Architecture](./figures/architecture.png)
+![Architecture](./figures/architecture.png?)
 
 ## Requirements
 
