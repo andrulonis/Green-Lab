@@ -15,11 +15,9 @@ printAndSafe <- function(x, filePath) {
 par(mfrow=c(6, 10), mar=c(1, 1, 1, 1))
 
 for (i in seq(1, 60)) {
-  y <- unlist(df_total$EnergyPerS[i])
-  x <- unlist(df_total$AvgCPUPerS[i])
-  x <- x[y < 1000]
-  y <- y[y < 1000]
-  plot(x, y)
+  y <- df_total$EnergyPerS[i]
+  x <- df_total$AvgCPUPerS[i]
+  plot(unlist(x), unlist(y))
 }
 
 df_total$PearsonCoeff = NA
@@ -27,8 +25,6 @@ df_total$PearsonCoeff = NA
 for (row in 1:nrow(df_total)) {
   y <- unlist(df_total$EnergyPerS[row])
   x <- unlist(df_total$AvgCPUPerS[row])
-  x <- x[y < 1000]
-  y <- y[y < 1000]
   df_total$PearsonCoeff[row] = cor(as.numeric(x), as.numeric(y), method = "pearson")
 }
 
@@ -128,10 +124,10 @@ for (metric in metrics) {
 # Wilcox test for RQ1 and RQ2, t-test for RQ3
 counter = 1
 for (row in seq(1, nrow(df_total), by = 20)) {
-  print(sprintf("AvgCPU p-value for example %s: %f",counter,wilcox.test(df_total$AvgCPU[row:(row+9)],df_total$AvgCPU[(row+10):(row+19)],)$p.value))
-  print(sprintf("AvgMem p-value for example %s: %f",counter,wilcox.test(df_total$AvgMem[row:(row+9)],df_total$AvgMem[(row+10):(row+19)],)$p.value)) 
-  print(sprintf("ExecTime p-value for example %s: %f",counter,wilcox.test(df_total$ExecTime[row:(row+9)],df_total$ExecTime[(row+10):(row+19)],)$p.value))
-  print(sprintf("TotalEnergy p-value for example %s: %f",counter,wilcox.test(df_total$TotalEnergy[row:(row+9)],df_total$TotalEnergy[(row+10):(row+19)],)$p.value))
-  print(sprintf("PearsonCoeff p-value for example %s: %f",counter,t.test(df_total$PearsonCoeff[row:(row+9)],df_total$PearsonCoeff[(row+10):(row+19)],)$p.value))
+  print(sprintf("AvgCPU p-value for example %s: %.10f",counter,wilcox.test(df_total$AvgCPU[row:(row+9)],df_total$AvgCPU[(row+10):(row+19)])$p.value))
+  print(sprintf("AvgMem p-value for example %s: %.10f",counter,wilcox.test(df_total$AvgMem[row:(row+9)],df_total$AvgMem[(row+10):(row+19)])$p.value)) 
+  print(sprintf("ExecTime p-value for example %s: %.10f",counter,wilcox.test(df_total$ExecTime[row:(row+9)],df_total$ExecTime[(row+10):(row+19)])$p.value))
+  print(sprintf("TotalEnergy p-value for example %s: %.10f",counter,wilcox.test(df_total$TotalEnergy[row:(row+9)],df_total$TotalEnergy[(row+10):(row+19)])$p.value))
+  print(sprintf("PearsonCoeff p-value for example %s: %.10f",counter,t.test(df_total$PearsonCoeff[row:(row+9)],df_total$PearsonCoeff[(row+10):(row+19)])$p.value))
   counter = counter + 1
 }

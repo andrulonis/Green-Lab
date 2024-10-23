@@ -115,8 +115,8 @@ df_total <- data.frame(
   AvgMem = numeric(),
   ExecTime = numeric(),
   TotalEnergy = numeric(),
-  AvgCPUPerS = I(numeric()),
-  EnergyPerS = I(numeric()),
+  AvgCPUPerS = I(list()),
+  EnergyPerS = I(list()),
   stringsAsFactors = FALSE
 )
 
@@ -148,6 +148,11 @@ counter <- 1
 for (job in seq_along(job_types)) {
   for (mode in seq_along(modes)) {
     for (run in 1:ncol(avg_cpu)) {
+      avg_cpu_usage <- unlist(cpu_mean_usage[counter, run])
+      avg_energy_usage <- unlist(energy_usage[counter, run])
+      avg_cpu_usage <- avg_cpu_usage[avg_energy_usage < 1000]
+      avg_energy_usage <- avg_energy_usage[avg_energy_usage < 1000]
+      
       entry <- data.frame(
         JobType = job_types[job],
         Mode = modes[mode],
@@ -156,9 +161,10 @@ for (job in seq_along(job_types)) {
         AvgMem = avg_mem[counter, run],
         ExecTime = execution_time[counter, run],
         TotalEnergy = total_energy[counter, run],
-        AvgCPUPerS = I(cpu_mean_usage[counter, run]),
-        EnergyPerS = I(energy_usage[counter, run])
+        AvgCPUPerS = I(list(avg_cpu_usage)),
+        EnergyPerS = I(list(avg_energy_usage))
       )
+      
       df_total <- rbind(df_total, entry)
     }
     counter <- counter + 1
