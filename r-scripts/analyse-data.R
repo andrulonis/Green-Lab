@@ -41,7 +41,7 @@ for (seq_run in seq(from = 1, to = 5, by = 2)) {
 # Calculate necessary values for RQ1 and RQ2
 
 # total_energy will be populated later with the help of data for RQ3.
-# This is due to the problem with the resetting of the power value.
+# This is due to the problem with the wraparound of the power value reported by the machine.
 total_energy = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
 
 execution_time = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
