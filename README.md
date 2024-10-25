@@ -153,6 +153,6 @@ cp configs/haddock/experiments/HPC_Haddock/*/* r-scripts/results-data
 
 Then run the R script inside RStudio by opening it and then pressing: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>.
 
-The resulting plots will be safed in the ``r-scripts/out`` folder.
+The resulting plots will be saved in the ``r-scripts/out`` folder.
 
 
