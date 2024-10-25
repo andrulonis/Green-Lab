@@ -123,13 +123,13 @@ Note that once you successfully run an experiment, the framework will not allow 
 We provide three R script to load and analyse the data from our experiments.
 * To extract the data from the experiment's output files we provide the script [analyse-data.R](r-scripts/analyse-data.R)
 * The diagrams presented in the report can be created using the [plot-data.R](r-scripts/plot-data.R) script
-* For checking the data distribution and testing the hypotheses we one can use the [hypotheses-tests.R](r-scripts/hypotheses-tests.R) script
+* For checking the data distribution and testing the hypotheses one can use the [hypotheses-tests.R](r-scripts/hypotheses-tests.R) script
 
 ❗ The [analyse-data.R](r-scripts/analyse-data.R) must be executed before one of the other scripts can be run
 
 ### 1. Install R
 
-To run the R scripts we recommend to install R Studio as well as R. An installation introduction can be found [here]( https://posit.co/download/rstudio-desktop/).
+To run the R scripts we recommend to install R Studio (used version 2024.09.0+375) as well as R (used version: 4.4.1). An installation introduction can be found [here]( https://posit.co/download/rstudio-desktop/).
 
 Following packages need to be installed before the scripts can be run:
 * ggplot2
