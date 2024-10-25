@@ -43,6 +43,7 @@ for (seq_run in seq(from = 1, to = 5, by = 2)) {
 # total_energy will be populated later with the help of data for RQ3.
 # This is due to the problem with the wraparound of the power value reported by the machine.
 total_energy = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
+RAM_total_energy = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
 
 execution_time = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
 avg_mem = matrix(NA, 6 * 10, nrow = 6, ncol = 10)
@@ -62,6 +63,7 @@ for (run in 1:nrow(data)) {
 
 cpu_mean_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
 energy_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
+RAM_energy_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
 
 for (run in 1:nrow(data)) {
   for (rep in 1:ncol(data)) {
@@ -82,16 +84,20 @@ for (run in 1:nrow(data)) {
     energy_values[energy_values > 100] = mean(energy_values[energy_values >= 0 &
                                                               energy_values <= 100])
     energy_usage[[run, rep]] = as.list(energy_values)
+    
+    RAM_energy_values = diff(data_rq3[[run, rep]][, "DRAM_ENERGY..J."])
+    RAM_energy_values[RAM_energy_values < 0] = RAM_energy_values[RAM_energy_values < 0] + 262144
+    RAM_energy_values[RAM_energy_values > 100] = mean(RAM_energy_values[RAM_energy_values >= 0 &
+                                                                          RAM_energy_values <= 100])
+    RAM_energy_usage[[run, rep]] = as.list(RAM_energy_values)
   }
 }
-
-
-
 
 # Get the energy usage from the power consumption:
 for (run in 1:nrow(data)) {
   for (rep in 1:ncol(data)) {
     total_energy[[run, rep]] = sum(unlist(energy_usage[[run, rep]]))
+    RAM_total_energy[[run,rep]] = sum(unlist(RAM_energy_usage[[run,rep]]))
   }
 }
 
@@ -120,30 +126,6 @@ df_total <- data.frame(
   stringsAsFactors = FALSE
 )
 
-cpu_mean_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
-energy_usage = matrix(vector("list", 6 * 10), nrow = 6, ncol = 10)
-
-for (run in 1:nrow(data)) {
-  for (rep in 1:ncol(data)) {
-    num_rows = nrow(data_rq3[[run, rep]])
-    
-    if (is.null(num_rows)) {
-      next
-    }
-    
-    cpu_means = numeric(num_rows)
-    
-    for (row_id in 1:num_rows) {
-      cpu_means[row_id] = mean(data_rq3[[run, rep]][row_id, cpu_columns])
-    }
-    cpu_mean_usage[[run, rep]] = as.list(cpu_means[-1])
-    energy_values = diff(data_rq3[[run, rep]][, "PACKAGE_ENERGY..J."])
-    energy_values[energy_values < 0] = energy_values[energy_values < 0] + 262144
-    energy_values[energy_values > 100] = mean(energy_values[energy_values >= 0 & energy_values <= 100])
-    energy_usage[[run, rep]] = as.list(energy_values)
-  }
-}
-
 counter <- 1
 for (job in seq_along(job_types)) {
   for (mode in seq_along(modes)) {
@@ -170,8 +152,6 @@ for (job in seq_along(job_types)) {
     counter <- counter + 1
   }
 }
-
-
 
 # Calculate the means of CPU usage and power consumption over all repetitions
 
@@ -254,3 +234,6 @@ save(avg_power_all,
        "/out/avg_power_all.RData",
        sep = ""
      ))
+
+total_energy_experiment = sum(total_energy) + sum(RAM_total_energy)
+total_execution_time = sum(execution_time)/(1000*60*60)
