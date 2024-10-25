@@ -120,11 +120,16 @@ Note that once you successfully run an experiment, the framework will not allow 
 
 ## Data extraction
 
-We provide an R script to extract the data from the experiment's output files [here](r-scripts/analyse-data.R). 
+We provide three R script to load and analyse the data from our experiments.
+* To extract the data from the experiment's output files we provide the script [analyse-data.R](r-scripts/analyse-data.R)
+* The diagrams presented in the report can be created using the [plot-data.R](r-scripts/plot-data.R) script
+* For checking the data distribution and testing the hypotheses we one can use the [hypotheses-tests.R](r-scripts/hypotheses-tests.R) script
+
+❗ The [analyse-data.R](r-scripts/analyse-data.R) must be executed before one of the other scripts can be run
 
 ### 1. Install R
 
-TODO: install R studio or R?
+To run the R scripts we recommend to install R Studio as well as R. An installation introduction can be found [here]( https://posit.co/download/rstudio-desktop/)
 
 ### 2. Running the script
 
@@ -141,5 +146,7 @@ cp configs/haddock/experiments/HPC_Haddock/*/* r-scripts/results-data
 ```
 
 Then run the R script inside RStudio by opening it and then pressing: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>.
+
+The resulting plots will be safed in the ``r-scripts/out`` folder.
 
 
