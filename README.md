@@ -125,7 +125,7 @@ We provide three R script to load and analyse the data from our experiments.
 * The diagrams presented in the report can be created using the [plot-data.R](r-scripts/plot-data.R) script
 * For checking the data distribution and testing the hypotheses one can use the [hypotheses-tests.R](r-scripts/hypotheses-tests.R) script
 
-❗ The [analyse-data.R](r-scripts/analyse-data.R) must be executed before one of the other scripts can be run
+❗ The [analyse-data.R](r-scripts/analyse-data.R) script must be executed before one of the other scripts can be run
 
 ### 1. Install R
 
