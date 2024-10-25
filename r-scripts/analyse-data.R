@@ -1,5 +1,5 @@
 library("tidyverse")
-library("ggplot2")
+
 setwd(paste(
   dirname(rstudioapi::getSourceEditorContext()$path),
   "/results-data",

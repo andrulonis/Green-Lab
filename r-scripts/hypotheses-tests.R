@@ -1,4 +1,3 @@
-install.packages("effsize")
 library(effsize)
 # Load the library needed for Cliff Delta and Cohen's D
 
@@ -125,25 +124,32 @@ for (metric in metrics) {
   }
 }
 
-# Wilcox test for RQ1 and RQ2, t-test for RQ3
+
+filePath = file.path(
+  dirname(rstudioapi::getSourceEditorContext()$path),
+  "out",
+  "hypotheses-tests.txt"
+)
+file.remove(filePath)
+# Mann-Whitney test for RQ1 and RQ2, t-test for RQ3
 counter = 1
 for (row in seq(1, nrow(df_total), by = 20)) {
-  print(sprintf("AvgCPU p-value for example %s: %.10f",counter,wilcox.test(df_total$AvgCPU[row:(row+9)],df_total$AvgCPU[(row+10):(row+19)])$p.value))
-  print(sprintf("AvgMem p-value for example %s: %.10f",counter,wilcox.test(df_total$AvgMem[row:(row+9)],df_total$AvgMem[(row+10):(row+19)])$p.value)) 
-  print(sprintf("ExecTime p-value for example %s: %.10f",counter,wilcox.test(df_total$ExecTime[row:(row+9)],df_total$ExecTime[(row+10):(row+19)])$p.value))
-  print(sprintf("TotalEnergy p-value for example %s: %.10f",counter,wilcox.test(df_total$TotalEnergy[row:(row+9)],df_total$TotalEnergy[(row+10):(row+19)])$p.value))
-  print(sprintf("PearsonCoeff p-value for example %s: %.10f",counter,t.test(df_total$PearsonCoeff[row:(row+9)],df_total$PearsonCoeff[(row+10):(row+19)])$p.value))
+  printAndSafe(sprintf("AvgCPU p-value for example %s: %.10f",counter,wilcox.test(df_total$AvgCPU[row:(row+9)],df_total$AvgCPU[(row+10):(row+19)])$p.value), filePath)
+  printAndSafe(sprintf("\nAvgMem p-value for example %s: %.10f",counter,wilcox.test(df_total$AvgMem[row:(row+9)],df_total$AvgMem[(row+10):(row+19)])$p.value), filePath)
+  printAndSafe(sprintf("\nExecTime p-value for example %s: %.10f",counter,wilcox.test(df_total$ExecTime[row:(row+9)],df_total$ExecTime[(row+10):(row+19)])$p.value), filePath)
+  printAndSafe(sprintf("\nTotalEnergy p-value for example %s: %.10f",counter,wilcox.test(df_total$TotalEnergy[row:(row+9)],df_total$TotalEnergy[(row+10):(row+19)])$p.value), filePath)
+  printAndSafe(sprintf("\nPearsonCoeff p-value for example %s: %.10f",counter,t.test(df_total$PearsonCoeff[row:(row+9)],df_total$PearsonCoeff[(row+10):(row+19)])$p.value), filePath)
 
-  print("")
+  printAndSafe("\n\n", filePath)
   cliff_avgcpu = cliff.delta(df_total$AvgCPU[row:(row+9)],df_total$AvgCPU[(row+10):(row+19)])
   cliff_avgmem = cliff.delta(df_total$AvgMem[row:(row+9)],df_total$AvgMem[(row+10):(row+19)])
   cliff_exectime = cliff.delta(df_total$ExecTime[row:(row+9)],df_total$ExecTime[(row+10):(row+19)])
   cliff_totenergy = cliff.delta(df_total$TotalEnergy[row:(row+9)],df_total$TotalEnergy[(row+10):(row+19)])
   cohen_pearson = cohen.d(df_total$PearsonCoeff[row:(row+9)],df_total$PearsonCoeff[(row+10):(row+19)])
-  print(sprintf("AvgCPU Cliff's Delta for example %s: estimate= %s, confidence level= %s",counter,cliff_avgcpu$estimate, cliff_avgcpu$conf.int))
-  print(sprintf("AvgMem Cliff's Delta for example %s: estimate= %s, confidence level= %s",counter,cliff_avgmem$estimate, cliff_avgmem$conf.int)) 
-  print(sprintf("ExecTime Cliff's Delta for example %s: estimate= %s, confidence level= %s",counter,cliff_exectime$estimate, cliff_exectime$conf.int))
-  print(sprintf("TotalEnergy Cliff's Delta for example %s: estimate= %s, confidence level= %s",counter,cliff_totenergy$estimate, cliff_totenergy$conf.int))
-  print(sprintf("PearsonCoeff Cohen's D for example %s: estimate= %s, confidence level= %s",counter,cohen_pearson$estimate, cohen_pearson$conf.int))
+  printAndSafe(sprintf("\nAvgCPU Cliff's Delta for example %s: estimate= %s, confidence level= %s",counter,cliff_avgcpu$estimate, cliff_avgcpu$conf.int), filePath)
+  printAndSafe(sprintf("\nAvgMem Cliff's Delta for example %s: estimate= %s, confidence level= %s",counter,cliff_avgmem$estimate, cliff_avgmem$conf.int), filePath)
+  printAndSafe(sprintf("\nExecTime Cliff's Delta for example %s: estimate= %s, confidence level= %s",counter,cliff_exectime$estimate, cliff_exectime$conf.int), filePath)
+  printAndSafe(sprintf("\nTotalEnergy Cliff's Delta for example %s: estimate= %s, confidence level= %s",counter,cliff_totenergy$estimate, cliff_totenergy$conf.int), filePath)
+  printAndSafe(sprintf("\nPearsonCoeff Cohen's D for example %s: estimate= %s, confidence level= %s",counter,cohen_pearson$estimate, cohen_pearson$conf.int), filePath)
   counter = counter + 1
 }

@@ -1,4 +1,5 @@
 # Load data from analyse-data.R
+library("ggplot2")
 
 load(paste(
   dirname(rstudioapi::getSourceEditorContext()$path),

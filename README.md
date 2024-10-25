@@ -129,7 +129,13 @@ We provide three R script to load and analyse the data from our experiments.
 
 ### 1. Install R
 
-To run the R scripts we recommend to install R Studio as well as R. An installation introduction can be found [here]( https://posit.co/download/rstudio-desktop/)
+To run the R scripts we recommend to install R Studio as well as R. An installation introduction can be found [here]( https://posit.co/download/rstudio-desktop/).
+
+Following packages need to be installed before the scripts can be run:
+* ggplot2
+* tidyverse
+* effsize
+* car
 
 ### 2. Running the script
 
